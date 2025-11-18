@@ -30,11 +30,11 @@ export default function PrivacyPolicyPage() {
                 href="/legal/terms"
                 className="text-blue-400 hover:text-blue-300 transition-colors"
               >
-                Terms of Service
+                Terms and Conditions
               </a>
               , which incorporates this Privacy Policy. Any terms we use in this
               Policy without defining them have the definitions given to them in
-              the Terms of Service.
+              the Terms and Conditions.
             </p>
           </section>
 
@@ -684,7 +684,7 @@ export default function PrivacyPolicyPage() {
               Personal Data of Children
             </h2>
             <p>
-              As noted in the Terms of Service, we do not knowingly collect or
+              As noted in the Terms and Conditions, we do not knowingly collect or
               solicit Personal Data about children under 13 years of age; if you
               are a child under the age of 13, please do not attempt to register
               for or otherwise use the Services or send us any Personal Data. If
@@ -785,7 +785,7 @@ export default function PrivacyPolicyPage() {
                 <p>
                   We process some Personal Data as a matter of "contractual
                   necessity", meaning that we need to process the data to
-                  perform under our Terms of Service with you, which enables us
+                  perform under our Terms and Conditions with you, which enables us
                   to provide you with the Services. When we process data due to
                   contractual necessity, failure to provide such Personal Data
                   will result in your inability to use some or all portions of

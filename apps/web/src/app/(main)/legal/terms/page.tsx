@@ -7,7 +7,7 @@ export default function TermsOfServicePage() {
       <div className="max-w-4xl mx-auto px-4 py-16 lg:py-24">
         {/* Header */}
         <h1 className="text-4xl lg:text-6xl font-bold mb-4">
-          Terms of Service
+          Terms and Conditions
         </h1>
         <p className="text-[#b1b1b1] text-lg mb-12">
           Effective date: January 8, 2024
@@ -19,7 +19,7 @@ export default function TermsOfServicePage() {
           <section>
             <p className="text-lg">
               Welcome to Opensox.ai ("Opensox," "we," "us," or "our"). Please
-              read these Terms of Service ("Terms") carefully as they govern
+              read these Terms and Conditions ("Terms") carefully as they govern
               your use of our platform, website, and services. By accessing or
               using Opensox.ai, you agree to be bound by these Terms. If you do
               not agree to these Terms, please do not use our Services.
@@ -500,8 +500,8 @@ export default function TermsOfServicePage() {
               18. Contact Information
             </h2>
             <p>
-              For questions, concerns, or feedback regarding these Terms of
-              Service, please contact us:
+              For questions, concerns, or feedback regarding these Terms and
+              Conditions, please contact us:
             </p>
             <div className="mt-4 space-y-2">
               <p>
@@ -531,7 +531,7 @@ export default function TermsOfServicePage() {
           <section className="border-t border-[#252525] pt-8">
             <p className="text-base italic text-[#b1b1b1]">
               By using Opensox.ai, you acknowledge that you have read,
-              understood, and agree to be bound by these Terms of Service.
+              understood, and agree to be bound by these Terms and Conditions.
             </p>
           </section>
         </div>
