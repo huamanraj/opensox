@@ -51,7 +51,7 @@ export const blogs: BlogPost[] = [
   },
   {
     date: "08-11-25",
-    linkText: "why you shouln't register a company?",
+    linkText: "why you shouldn't register a company?",
     link: "https://x.com/ajeetunc/status/1987125877985968217?s=20",
     tag: "startup",
   },
