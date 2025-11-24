@@ -51,25 +51,25 @@ export const blogs: BlogPost[] = [
   },
   {
     date: "02-12-23",
-    linkText: "Why you should do open source?",
+    linkText: "why you should do open source?",
     link: "https://x.com/ajeetunc/status/1987490955298230369?s=20",
     tag: "engineering",
   },
   {
     date: "10-11-25",
-    linkText: "Ugly execution wins",
+    linkText: "ugly execution wins",
     link: "https://x.com/ajeetunc/status/1987931607102341182?s=20",
     tag: "misc",
   },
   {
     date: "08-11-25",
-    linkText: "Why you shouldn't register a company?",
+    linkText: "why you shouldn't register a company?",
     link: "https://x.com/ajeetunc/status/1987125877985968217?s=20",
     tag: "startup",
   },
   {
     date: "08-11-25",
-    linkText: "Tiny habits that changed my life",
+    linkText: "tiny habits that changed my life",
     link: "https://x.com/ajeetunc/status/1987043154974154762?s=20",
     tag: "misc",
   },
@@ -81,7 +81,7 @@ export const blogs: BlogPost[] = [
   },
   {
     date: "16-11-25",
-    linkText: "Snapshot of my life so far",
+    linkText: "snapshot of my life so far",
     link: "https://x.com/ajeetunc/status/1989355142081065468?s=20",
     tag: "misc",
   },
