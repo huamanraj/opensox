@@ -1,8 +1,6 @@
-// src/data/oss-programs/index.ts
 import { cache } from "react";
 import type { Program } from "./types";
 
-// Lazy program loaders - reduces initial bundle and parsing time
 const programLoaders: Record<string, () => Promise<{ default?: Program } & Record<string, Program>>> = {
   "google-summer-of-code": () => import("./programs/google-summer-of-code"),
   "outreachy": () => import("./programs/outreachy"),
@@ -108,5 +106,4 @@ async function getAllTagsImpl(): Promise<string[]> {
   }
 }
 
-// Wrap with React cache() for request-scoped memoization
 export const getAllTags = cache(getAllTagsImpl);

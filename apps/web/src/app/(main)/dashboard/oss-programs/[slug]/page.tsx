@@ -79,15 +79,12 @@ export default async function ProgramPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-
-  // Lazy load only the program we need
   const program = await getProgramBySlug(slug);
 
   if (!program) {
     notFound();
   }
 
-  // Pre-render all markdown sections at build time (server-side)
   const sectionsWithHtml = program.sections.map((section) => ({
     ...section,
     contentHtml: renderMarkdown(section.bodyMarkdown),
