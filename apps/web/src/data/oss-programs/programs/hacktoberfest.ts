@@ -3,8 +3,8 @@ import type { Program } from "../types";
 export const hacktoberfest: Program = {
   slug: "hacktoberfest",
   name: "Hacktoberfest",
-  tagline: "Digital Ocean October event.",
-  shortDescription: "Digital Ocean October event.",
+  tagline: "Month-long celebration of open source with contribution rewards",
+  shortDescription: "A global event run by DigitalOcean that encourages developers of all levels to contribute to open source projects during October. Participants earn digital badges, tree plantings, and swag by completing pull requests and making meaningful contributions to the community.",
   websiteUrl: "https://hacktoberfest.com/",
   tags: ["open source", "beginner", "swag", "remote", "global"],
   region: "global",

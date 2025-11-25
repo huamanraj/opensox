@@ -3,8 +3,8 @@ import type { Program } from "../types";
 export const githubCampusExperts: Program = {
   slug: "github-campus-experts",
   name: "GitHub Campus Experts",
-  tagline: "Community leadership.",
-  shortDescription: "Community leadership.",
+  tagline: "Helps students build and grow technical communities on campus",
+  shortDescription: "A leadership program for university students who want to establish and expand tech communities on their campuses. Participants gain public speaking skills, leadership training, and access to GitHub resources while fostering innovation and collaboration among their peers.",
   websiteUrl:
     "https://docs.github.com/en/education/about-github-education/use-github-at-your-educational-institution/applying-to-be-a-github-campus-expert",
   tags: ["community", "leadership", "student", "swag", "learning"],
