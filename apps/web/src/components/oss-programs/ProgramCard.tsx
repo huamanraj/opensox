@@ -42,5 +42,4 @@ function ProgramCard({ program }: ProgramCardProps) {
   );
 }
 
-// Memoize to prevent unnecessary re-renders during filtering/searching
 export default React.memo(ProgramCard);
