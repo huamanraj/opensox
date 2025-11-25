@@ -2,7 +2,7 @@ import { getProgramBySlug, getAllPrograms } from "@/data/oss-programs";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { JSDOM } from  "jsdom"; 
+import { JSDOM } from "jsdom";
 import { ProgramHeader, ProgramMetadata, ProgramSection } from "@/components/oss-programs";
 import "./program-styles.css";
 

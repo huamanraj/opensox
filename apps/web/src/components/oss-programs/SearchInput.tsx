@@ -8,7 +8,7 @@ interface SearchInputProps {
   placeholder?: string;
 }
 
-export default function SearchInput({ value, onChange, placeholder = "Search programs..." }: SearchInputProps) {
+export default function SearchInput({ value, onChange, placeholder = "Search programs..." }: SearchInputProps): JSX.Element {
   return (
     <div className="relative flex-1">
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
@@ -17,7 +17,8 @@ export default function SearchInput({ value, onChange, placeholder = "Search pro
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-[#252525] border border-[#333] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#9455f4] transition-colors truncate"
+        className="w-full bg-dash-surface border border-dash-border rounded-xl py-3 pl-12 pr-4 text-text-primary placeholder-gray-500 focus:outline-none focus:border-brand-purple transition-colors truncate"
+        aria-label="Search programs"
       />
     </div>
   );

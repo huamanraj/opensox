@@ -3,7 +3,7 @@ import type { Program } from "../types";
 export const apertre: Program = {
   slug: "apertre",
   name: "Apertre 2.0",
-  tagline: "30-day OSS event Resourcio Community.",
+  tagline: "30-day OSS event by Resourcio Community.",
   shortDescription: "30-day OSS event Resourcio Community.",
   websiteUrl: "https://s2apertre.resourcio.in/",
   tags: ["open source", "beginner", "india", "prizes", "environment"],

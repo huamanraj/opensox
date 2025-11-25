@@ -1,4 +1,4 @@
-// src/data/programs/types.ts
+// apps/web/src/data/oss-programs/types.ts
 
 export type ProgramSlug =
   | "google-summer-of-code"

@@ -54,7 +54,7 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
   return (
     <div className="relative flex-1" ref={dropdownRef}>
       <div
-        className="flex items-center gap-2 bg-[#252525] border border-[#333] rounded-xl p-2 min-h-[50px] focus-within:border-[#9455f4] transition-colors cursor-text"
+        className="flex items-center gap-2 bg-dash-surface border border-dash-border rounded-xl p-2 min-h-[50px] focus-within:border-brand-purple transition-colors cursor-text"
         onClick={() => {
           inputRef.current?.focus();
           setIsDropdownOpen(true);
@@ -64,7 +64,7 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
           {selectedTags.map((tag) => (
             <span
               key={tag}
-              className="flex items-center gap-1 bg-[#9455f4]/20 text-[#dcb8ff] px-3 py-1 rounded-full text-sm flex-shrink-0"
+              className="flex items-center gap-1 bg-brand-purple/20 text-brand-purple-light px-3 py-1 rounded-full text-sm flex-shrink-0"
             >
               {tag}
               <button
@@ -72,6 +72,7 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
                   e.stopPropagation();
                   removeTag(tag);
                 }}
+                aria-label={`Remove ${tag}`}
                 className="hover:text-white"
               >
                 <X className="w-3 h-3" />
@@ -101,7 +102,7 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute z-20 top-full left-0 right-0 mt-2 bg-[#252525] border border-[#333] rounded-xl shadow-xl max-h-60 overflow-y-auto"
+            className="absolute z-20 top-full left-0 right-0 mt-2 bg-dash-surface border border-dash-border rounded-xl shadow-xl max-h-60 overflow-y-auto"
           >
             {availableTags.length === 0 ? (
               <div className="p-4 text-gray-500 text-center">No matching tags found</div>
@@ -110,7 +111,8 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
                 <button
                   key={tag}
                   onClick={() => addTag(tag)}
-                  className="w-full text-left px-4 py-3 hover:bg-[#333] text-gray-300 hover:text-white transition-colors flex items-center justify-between"
+                  aria-label={`Add tag ${tag}`}
+                  className="w-full text-left px-4 py-3 hover:bg-dash-hover text-gray-300 hover:text-white transition-colors flex items-center justify-between"
                 >
                   {tag}
                 </button>
