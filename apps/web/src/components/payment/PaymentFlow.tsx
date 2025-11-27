@@ -50,6 +50,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
     amount: number; // Stored for display purposes only
   } | null>(null);
 
+  const utils = trpc.useUtils();
   const createOrderMutation = (trpc.payment as any).createOrder.useMutation();
   const verifyPaymentMutation = (
     trpc.payment as any
@@ -71,7 +72,18 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
           planId: planId,
         });
 
-        // Show success and redirect
+        // invalidate cache and fetch fresh subscription status before redirect
+        // this ensures the checkout page shows the updated status immediately
+        // wrap in Promise.race with timeout to prevent hanging
+        await (utils.user as any).subscriptionStatus.invalidate();
+        await Promise.race([
+          (utils.user as any).subscriptionStatus.fetch(undefined, {
+            throwOnError: false,
+          }),
+          new Promise((resolve) => setTimeout(resolve, 3000)), // 3s timeout
+        ]);
+
+        // redirect after subscription status is fetched and cached
         router.push("/checkout");
       } catch (error) {
         console.error("Verification failed:", error);
