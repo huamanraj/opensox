@@ -72,18 +72,27 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
           planId: planId,
         });
 
-        // invalidate cache and fetch fresh subscription status before redirect
-        // this ensures the checkout page shows the updated status immediately
-        // wrap in Promise.race with timeout to prevent hanging
-        await (utils.user as any).subscriptionStatus.invalidate();
-        await Promise.race([
-          (utils.user as any).subscriptionStatus.fetch(undefined, {
-            throwOnError: false,
-          }),
-          new Promise((resolve) => setTimeout(resolve, 3000)), // 3s timeout
-        ]);
+        // payment verification succeeded - proceed with redirect
+        // subscription cache refresh is decoupled as best-effort background action
+        // errors in refresh won't affect the successful payment verification
+        (async () => {
+          try {
+            await (utils.user as any).subscriptionStatus.invalidate();
+            await Promise.race([
+              (utils.user as any).subscriptionStatus.fetch(undefined),
+              new Promise((resolve) => setTimeout(resolve, 3000)), // 3s timeout
+            ]);
+          } catch (refreshError) {
+            // log refresh errors separately without affecting payment flow
+            console.warn(
+              "subscription cache refresh failed (non-fatal):",
+              refreshError
+            );
+          }
+        })();
 
-        // redirect after subscription status is fetched and cached
+        // redirect immediately after successful verification
+        // checkout page will refetch subscription status if cache refresh failed
         router.push("/checkout");
       } catch (error) {
         console.error("Verification failed:", error);
