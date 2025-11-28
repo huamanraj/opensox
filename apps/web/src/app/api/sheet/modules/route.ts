@@ -1,21 +1,15 @@
+import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import { marked } from "marked";
-import type { SheetModule } from "./types";
+import type { SheetModule } from "@/data/sheet/types";
 
-// configure marked for rich markdown support
-marked.setOptions({
-  gfm: true, // github flavored markdown: tables, task lists, etc.
-  breaks: true, // line breaks
-});
-
-// cache modules in memory
-let cachedModules: SheetModule[] | null = null;
+// cache modules metadata in memory
+let cachedModules: Omit<SheetModule, "docContent">[] | null = null;
 
 const contentDir = path.join(process.cwd(), "src/data/sheet/content");
 
-function loadModules(): SheetModule[] {
+function loadModulesMetadata(): Omit<SheetModule, "docContent">[] {
   if (cachedModules) {
     return cachedModules;
   }
@@ -27,22 +21,18 @@ function loadModules(): SheetModule[] {
     }
 
     const files = fs.readdirSync(contentDir);
-    const modules: SheetModule[] = files
+    const modules = files
       .filter((file) => file.endsWith(".md"))
       .map((file) => {
         const filePath = path.join(contentDir, file);
         const fileContent = fs.readFileSync(filePath, "utf8");
-        const { data, content } = matter(fileContent);
-
-        // render markdown to html
-        const htmlContent = marked.parse(content) as string;
+        const { data } = matter(fileContent);
 
         return {
           id: data.id || file.replace(".md", ""),
           name: data.name || "Untitled",
           videoUrl: data.videoUrl || "",
           comingSoon: data.comingSoon ?? false,
-          docContent: htmlContent,
         };
       })
       .sort((a, b) => {
@@ -60,10 +50,8 @@ function loadModules(): SheetModule[] {
   }
 }
 
-// server-side only function - do not export sheetModules directly
-// use getSheetModules() instead for server components
-export function getSheetModules(): SheetModule[] {
-  return loadModules();
+export async function GET() {
+  const modules = loadModulesMetadata();
+  return NextResponse.json(modules);
 }
 
-export type { SheetModule };
