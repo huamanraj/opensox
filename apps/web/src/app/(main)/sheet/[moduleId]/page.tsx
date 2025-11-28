@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getSheetModules } from "@/data/sheet";
 import { SheetModuleHeader } from "@/components/sheet/SheetModuleHeader";
+import { SheetContentRenderer } from "@/components/sheet/SheetContentRenderer";
+import styles from "./sheet-content.module.css";
 
 interface PageProps {
   params: Promise<{ moduleId: string }>;
@@ -17,98 +19,6 @@ export default async function SheetModulePage({ params }: PageProps) {
 
   return (
     <>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .sheet-content {
-          color: rgb(225, 225, 225);
-          line-height: 1.75;
-        }
-        .sheet-content p {
-          margin-bottom: 1rem;
-          color: rgb(225, 225, 225);
-        }
-        .sheet-content h3 {
-          margin-top: 2.5rem;
-          margin-bottom: 1.25rem;
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: rgb(148, 85, 244);
-        }
-        .sheet-content h2 {
-          margin-top: 2rem;
-          margin-bottom: 0.75rem;
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: rgb(255, 255, 255);
-        }
-        .sheet-content h1 {
-          margin-top: 2rem;
-          margin-bottom: 1rem;
-          font-size: 1.875rem;
-          font-weight: 700;
-          color: rgb(255, 255, 255);
-        }
-        .sheet-content a {
-          color: rgb(148, 85, 244);
-          text-decoration: underline;
-        }
-        .sheet-content a:hover {
-          color: rgb(168, 105, 255);
-        }
-        .sheet-content strong {
-          font-weight: 600;
-          color: rgb(255, 255, 255);
-        }
-        .sheet-content em {
-          font-style: italic;
-        }
-        .sheet-content ul,
-        .sheet-content ol {
-          padding-left: 1.5rem;
-          margin-bottom: 1rem;
-          color: rgb(225, 225, 225);
-        }
-        .sheet-content li {
-          margin-bottom: 0.5rem;
-        }
-        .sheet-content img {
-          width: 60%;
-          max-width: 60%;
-          height: auto;
-          border-radius: 0.5rem;
-          margin: 1.25rem auto;
-          display: block;
-        }
-        .sheet-content blockquote {
-          border-left: 2px solid rgb(148, 85, 244);
-          padding-left: 1rem;
-          font-style: italic;
-          color: rgb(209, 209, 209);
-          margin: 1rem 0;
-        }
-        .sheet-content code {
-          color: rgb(148, 85, 244);
-          background-color: rgb(26, 26, 26);
-          padding: 0.125rem 0.375rem;
-          border-radius: 0.25rem;
-          font-size: 0.875rem;
-        }
-        .sheet-content pre {
-          background-color: rgb(26, 26, 26);
-          border: 1px solid rgb(37, 37, 37);
-          border-radius: 0.5rem;
-          padding: 1rem;
-          overflow-x: auto;
-          margin: 1rem 0;
-        }
-        .sheet-content pre code {
-          background: none;
-          padding: 0;
-        }
-      `,
-        }}
-      />
       <div className="min-h-screen bg-surface-primary">
         <div className="max-w-4xl mx-auto px-4 py-8 md:px-8">
           <SheetModuleHeader
@@ -141,9 +51,9 @@ export default async function SheetModulePage({ params }: PageProps) {
               )}
             </header>
 
-            <div
-              className="sheet-content"
-              dangerouslySetInnerHTML={{ __html: sheetModule.docContent }}
+            <SheetContentRenderer
+              className={styles.sheetContent}
+              content={sheetModule.docContent}
             />
           </article>
         </div>
