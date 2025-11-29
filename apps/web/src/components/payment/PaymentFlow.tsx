@@ -6,7 +6,7 @@ import { useRazorpay } from "@/hooks/useRazorpay";
 import type { RazorpayOptions } from "@/lib/razorpay";
 import PrimaryButton from "@/components/ui/custom-button";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface PaymentFlowProps {
   planId: string; // Required: Plan ID from database
@@ -44,6 +44,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
 }) => {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [isProcessing, setIsProcessing] = useState(false);
   const orderDataRef = useRef<{
     orderId: string;
@@ -122,7 +123,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
       }
 
       if (sessionStatus === "unauthenticated" || !session) {
-        router.push("/login?callbackUrl=/pricing");
+        router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
         return;
       }
 
@@ -173,7 +174,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
     } catch (error: any) {
       console.warn("Failed to create order:", error);
       setIsProcessing(false);
-      router.push("/login?callbackUrl=/pricing");
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
     }
   };
 
