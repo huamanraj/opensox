@@ -127,6 +127,12 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
         return;
       }
 
+      // check if session has accessToken - if not, re-authenticate
+      if (!session.accessToken) {
+        router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+        return;
+      }
+
       setIsProcessing(true);
 
       const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
@@ -172,9 +178,26 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
 
       await initiatePayment(options);
     } catch (error: any) {
-      console.warn("Failed to create order:", error);
+      console.error("Failed to create order:", error);
       setIsProcessing(false);
-      router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+
+      // only redirect to login for authentication errors
+      const errorMsg = error?.message?.toLowerCase() || "";
+      const isAuthError =
+        error?.data?.code === "UNAUTHORIZED" ||
+        errorMsg.includes("unauthorized") ||
+        errorMsg.includes("not authenticated") ||
+        errorMsg.includes("authentication failed") ||
+        errorMsg.includes("missing or invalid authorization");
+
+      if (isAuthError) {
+        router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+      } else {
+        // show error message for non-auth errors
+        const errorMessage =
+          error?.message || "Failed to process payment. Please try again.";
+        alert(errorMessage);
+      }
     }
   };
 
