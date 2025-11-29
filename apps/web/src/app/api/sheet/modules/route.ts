@@ -52,6 +52,9 @@ function loadModulesMetadata(): Omit<SheetModule, "docContent">[] {
 
 export async function GET() {
   const modules = loadModulesMetadata();
-  return NextResponse.json(modules);
+  return NextResponse.json(modules, {
+    headers: {
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+    },
+  });
 }
-

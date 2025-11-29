@@ -36,7 +36,7 @@ export default async function SheetModulePage({ params }: PageProps) {
                     href={sheetModule.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-brand-purple hover:text-brand-purple-light transition-colors"
+                    className="inline-flex items-center gap-2 text-brand-purple-light hover:text-brand-purple transition-colors"
                   >
                     <svg
                       className="w-5 h-5"

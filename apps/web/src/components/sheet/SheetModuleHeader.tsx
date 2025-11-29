@@ -112,7 +112,7 @@ export function SheetModuleHeader({
     <div className="flex items-center justify-between mb-8">
       <Link
         href="/dashboard/sheet"
-        className="inline-flex items-center gap-2 text-brand-purple hover:text-brand-purple-light transition-colors text-sm font-medium"
+        className="inline-flex items-center gap-2 text-brand-purple-light hover:text-brand-purple transition-colors text-sm font-medium"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Sheet
