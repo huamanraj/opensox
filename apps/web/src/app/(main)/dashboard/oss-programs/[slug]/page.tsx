@@ -1,8 +1,7 @@
 import { getProgramBySlug, getAllPrograms } from "@/data/oss-programs";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
-import DOMPurify from "dompurify";
-import { JSDOM } from "jsdom";
+import sanitizeHtml from "sanitize-html";
 import { ProgramHeader, ProgramMetadata, ProgramSection } from "@/components/oss-programs";
 import "./program-styles.css";
 
@@ -34,9 +33,46 @@ export default async function ProgramPage({
 
   const renderMarkdown = (markdown: string) => {
     const html = marked.parse(markdown) as string;
-    const window = new JSDOM("").window;
-    const purify = DOMPurify(window);
-    return purify.sanitize(html);
+    return sanitizeHtml(html, {
+      allowedTags: [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "br",
+        "strong",
+        "em",
+        "u",
+        "s",
+        "code",
+        "pre",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "a",
+        "img",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "hr",
+        "div",
+        "span",
+      ],
+      allowedAttributes: {
+        a: ["href", "title", "target", "rel"],
+        img: ["src", "alt", "title", "width", "height"],
+        code: ["class"],
+        pre: ["class"],
+      },
+      allowedSchemes: ["http", "https", "mailto"],
+    });
   };
 
   return (
