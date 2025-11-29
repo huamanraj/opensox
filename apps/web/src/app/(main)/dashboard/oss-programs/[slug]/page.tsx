@@ -2,7 +2,11 @@ import { getProgramBySlug, getAllPrograms } from "@/data/oss-programs";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
-import { ProgramHeader, ProgramMetadata, ProgramSection } from "@/components/oss-programs";
+import {
+  ProgramHeader,
+  ProgramMetadata,
+  ProgramSection,
+} from "@/components/oss-programs";
 import "./program-styles.css";
 
 export const revalidate = 3600;
@@ -76,7 +80,7 @@ export default async function ProgramPage({
   };
 
   return (
-    <main className="min-h-screen w-full bg-[#1e1e1e] text-white overflow-x-hidden">
+    <main className="min-h-screen w-full bg-dash-base text-white overflow-x-hidden">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12 w-full">
         <ProgramHeader program={program} />
         <ProgramMetadata program={program} />
