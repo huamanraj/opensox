@@ -10,9 +10,9 @@ export default function ProgramCard({ program }: ProgramCardProps) {
   return (
     <Link
       href={`/dashboard/oss-programs/${program.slug}`}
-      className="group block"
+      className="group block w-full"
     >
-      <div className="bg-[#252525] border border-[#333] rounded-xl px-4 py-3 md:px-5 md:py-4 hover:border-[#9455f4]/50 hover:bg-[#2a2a2a] transition-all duration-200 flex items-center justify-between gap-3 md:gap-4">
+      <div className="w-full bg-[#252525] border border-[#333] rounded-xl px-4 py-3 md:px-5 md:py-4 hover:border-[#9455f4]/50 hover:bg-[#2a2a2a] transition-all duration-200 flex items-center justify-between gap-3 md:gap-4 overflow-hidden">
         <div className="flex-1 min-w-0">
           <h2 className="text-sm md:text-base font-semibold text-white group-hover:text-[#dcb8ff] transition-colors truncate">
             {program.name}
@@ -24,7 +24,9 @@ export default function ProgramCard({ program }: ProgramCardProps) {
 
         <div className="hidden md:flex items-center gap-6 flex-shrink-0">
           <div className="text-right">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Region</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">
+              Region
+            </p>
             <p className="text-sm text-gray-300 capitalize">{program.region}</p>
           </div>
         </div>

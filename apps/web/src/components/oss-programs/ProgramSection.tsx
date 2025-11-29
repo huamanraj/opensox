@@ -8,16 +8,20 @@ interface ProgramSectionProps {
 
 const getSectionIcon = (sectionId: string) => {
   const icons: Record<string, React.ReactNode> = {
-    'what': <Info className="w-4 h-4" />,
-    'is-it-for-you': <User className="w-4 h-4" />,
-    'when': <Calendar className="w-4 h-4" />,
-    'how-to-prepare': <Rocket className="w-4 h-4" />,
-    'application-process': <FileText className="w-4 h-4" />,
+    what: <Info className="w-4 h-4" />,
+    "is-it-for-you": <User className="w-4 h-4" />,
+    when: <Calendar className="w-4 h-4" />,
+    "how-to-prepare": <Rocket className="w-4 h-4" />,
+    "application-process": <FileText className="w-4 h-4" />,
   };
   return icons[sectionId] || <Info className="w-4 h-4" />;
 };
 
-export default function ProgramSection({ id, title, contentHtml }: ProgramSectionProps) {
+export default function ProgramSection({
+  id,
+  title,
+  contentHtml,
+}: ProgramSectionProps) {
   return (
     <section id={id} className="scroll-mt-20">
       <h2 className="text-base md:text-lg lg:text-xl font-semibold mb-4 text-white flex items-center gap-2.5 tracking-tight">
@@ -40,9 +44,10 @@ export default function ProgramSection({ id, title, contentHtml }: ProgramSectio
           prose-code:text-[#dcb8ff] prose-code:bg-[#252525] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:md:text-sm prose-code:font-mono prose-code:before:content-[''] prose-code:after:content-[''] prose-code:break-all
           prose-pre:bg-[#252525] prose-pre:border prose-pre:border-[#333] prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto prose-pre:my-5
           prose-blockquote:border-l-4 prose-blockquote:border-[#9455f4] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-400 prose-blockquote:my-5
-          ${id === 'application-process' ? 'application-timeline' : ''}
-          ${id === 'how-to-prepare' ? 'preparation-checklist' : ''}
-          ${id === 'is-it-for-you' ? 'eligibility-section' : ''}`}
+          ${id === "application-process" ? "application-timeline" : ""}
+          ${id === "how-to-prepare" ? "preparation-checklist" : ""}
+          ${id === "is-it-for-you" ? "eligibility-section" : ""}
+          ${id === "what" ? "what-section" : ""}`}
         dangerouslySetInnerHTML={{ __html: contentHtml }}
       />
     </section>

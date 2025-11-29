@@ -104,10 +104,63 @@
   border-radius: 50%;
 }
 
-.application-timeline ul li:first-child::before {
-  background: var(--color-success);
+.application-timeline ul li:first-child::before,
+.application-timeline ul li:last-child::before {
+  background: var(--color-primary);
 }
 
-.application-timeline ul li:last-child::before {
-  background: var(--color-warning);
+/* Mask the line above the first dot */
+.application-timeline ul li:first-child::after {
+  content: "";
+  position: absolute;
+  left: -2rem;
+  /* Cover the border area to the left */
+  top: 0;
+  width: 2rem;
+  height: 0.85rem;
+  /* Height up to the dot */
+  background: theme('colors.dash.base');
+  /* Match page background */
+  z-index: 1;
+}
+
+/* Mask the line below the last dot */
+.application-timeline ul li:last-child::after {
+  content: "";
+  position: absolute;
+  left: -2rem;
+  top: calc(0.85rem + 8px);
+  /* Start after the dot */
+  bottom: 0;
+  width: 2rem;
+  background: theme('colors.dash.base');
+  z-index: 1;
+}
+
+/* What this program is about section styling */
+.what-section p {
+  line-height: 2 !important;
+  /* Increased line spacing */
+  margin-bottom: 1.5rem !important;
+  /* More space between paragraphs */
+  color: #e5e5e5;
+  /* Slightly brighter text for clarity */
+}
+
+.what-section h3 {
+  margin-top: 3rem !important;
+  /* significantly more space before subsections like Duration/Stipend */
+  margin-bottom: 1rem !important;
+  color: var(--color-primary);
+  /* Highlight these headers */
+}
+
+.what-section h4 {
+  margin-top: 2.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* If Duration/Stipend are emphasized text at start of lines */
+.what-section p strong {
+  color: white;
 }
