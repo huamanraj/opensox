@@ -10,7 +10,11 @@ interface TagFilterProps {
   onTagsChange: (tags: string[]) => void;
 }
 
-export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilterProps) {
+export default function TagFilter({
+  tags,
+  selectedTags,
+  onTagsChange,
+}: TagFilterProps) {
   const [filterInput, setFilterInput] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -18,7 +22,10 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     }
@@ -46,7 +53,11 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && filterInput === "" && selectedTags.length > 0) {
+    if (
+      e.key === "Backspace" &&
+      filterInput === "" &&
+      selectedTags.length > 0
+    ) {
       removeTag(selectedTags[selectedTags.length - 1]);
     }
   };
@@ -105,7 +116,9 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
             className="absolute z-20 top-full left-0 right-0 mt-2 bg-dash-surface border border-dash-border rounded-xl shadow-xl max-h-60 overflow-y-auto"
           >
             {availableTags.length === 0 ? (
-              <div className="p-4 text-gray-500 text-center">No matching tags found</div>
+              <div className="p-4 text-gray-500 text-center">
+                No matching tags found
+              </div>
             ) : (
               availableTags.map((tag) => (
                 <button
