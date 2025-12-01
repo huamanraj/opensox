@@ -52,15 +52,15 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
   };
 
   return (
-    <div className="relative flex-1" ref={dropdownRef}>
+    <div className="relative flex-1 min-w-0" ref={dropdownRef}>
       <div
-        className="flex items-center gap-2 bg-dash-surface border border-dash-border rounded-xl p-2 min-h-[50px] focus-within:border-brand-purple transition-colors cursor-text"
+        className="flex items-center gap-2 bg-dash-surface border border-dash-border rounded-xl p-2 min-h-[50px] focus-within:border-brand-purple transition-colors cursor-text min-w-0"
         onClick={() => {
           inputRef.current?.focus();
           setIsDropdownOpen(true);
         }}
       >
-        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0 overflow-hidden">
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           {selectedTags.map((tag) => (
             <span
               key={tag}
@@ -90,7 +90,7 @@ export default function TagFilter({ tags, selectedTags, onTagsChange }: TagFilte
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsDropdownOpen(true)}
-            className="bg-transparent text-white placeholder-gray-500 focus:outline-none flex-1 min-w-[120px]"
+            className="bg-transparent text-white placeholder-gray-500 focus:outline-none flex-1 min-w-0"
           />
         </div>
         <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />

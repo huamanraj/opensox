@@ -30,15 +30,15 @@ export default function ProgramsList({ programs, tags }: ProgramsListProps) {
   }, [programs, searchQuery, selectedTags]);
 
   return (
-    <div className="min-h-full w-full max-w-[100vw] bg-[#1e1e1e] text-white p-4 md:p-8 lg:p-12 overflow-x-hidden">
-      <div className="max-w-6xl mx-auto w-full">
+    <div className="min-h-full w-[99vw] lg:w-[80vw] bg-dash-base text-white p-4 md:p-8 lg:p-12 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto w-full min-w-0">
         {/* Header Section */}
-        <div className="flex flex-col gap-8 mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-white break-words">
+        <div className="flex flex-col gap-8 mb-12 min-w-0">
+          <h1 className="text-3xl md:text-4xl font-bold text-text-primary break-words">
             OSS Programs
           </h1>
 
-          <div className="flex flex-col md:flex-row gap-4 w-full">
+          <div className="flex flex-col md:flex-row gap-4 w-full min-w-0">
             <SearchInput
               value={searchQuery}
               onChange={setSearchQuery}
@@ -53,9 +53,9 @@ export default function ProgramsList({ programs, tags }: ProgramsListProps) {
         </div>
 
         {/* List Section */}
-        <div className="flex flex-col gap-2 md:gap-3">
+        <div className="flex flex-col gap-2 md:gap-3 min-w-0">
           {filteredPrograms.length === 0 ? (
-            <div className="text-center py-20 text-gray-500">
+            <div className="text-center py-20 text-text-muted">
               No programs found matching your criteria.
             </div>
           ) : (
