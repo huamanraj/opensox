@@ -102,3 +102,15 @@ model Plan {
   updatedAt     DateTime       @updatedAt
   subscriptions Subscription[]
 }
+
+model Sponsor {
+  id                  String   @id @default(cuid())
+  company_name        String
+  description         String
+  website             String
+  image_url           String
+  razorpay_payment_id String?
+  razorpay_sub_id     String?
+  plan_status         String   // active, cancelled, pending_payment, pending_submission, failed
+  created_at          DateTime @default(now())
+}

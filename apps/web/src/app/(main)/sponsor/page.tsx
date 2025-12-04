@@ -1,7 +1,7 @@
-import React from "react";
-import Link from "next/link";
-import { Metadata } from "next";
-import { ArrowRight } from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import Footer from "@/components/landing-sections/footer";
 import {
   Accordion,
@@ -10,17 +10,80 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import PrimaryButton from "@/components/ui/custom-button";
-
-export const metadata: Metadata = {
-  title: "Sponsor OpenSox - Reach Developers & Open Source Enthusiasts",
-  description:
-    "Get your brand in front of thousands of developers, open source contributors, and tech enthusiasts by sponsoring OpenSox.",
-};
+import Image from "next/image";
+import { trpc } from "@/lib/trpc";
+import { useRouter } from "next/navigation";
+import { useRazorpay } from "@/hooks/useRazorpay";
 
 const SponsorPage = () => {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay({
+    onSuccess: (response) => {
+      // Redirect to submission page with payment ID
+      router.push(`/sponsor/submit?paymentId=${response.razorpay_payment_id}`);
+    },
+    onFailure: (error) => {
+      console.error("Payment failed:", error);
+      alert("Payment failed: " + error.message);
+      setLoading(false);
+    },
+    onDismiss: () => {
+      setLoading(false);
+    },
+  });
+
+  const createSubscriptionMutation = (
+    trpc.sponsor.createSubscription as any
+  ).useMutation({
+    onSuccess: async (data: any) => {
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: "OpenSox",
+        description: "Sponsorship Subscription",
+        order_id: data.orderId,
+        prefill: {
+          // We could prefill user details if we had them in context
+        },
+        theme: {
+          color: "#4dd0a4",
+        },
+      };
+
+      await initiatePayment(options);
+    },
+    onError: (error: any) => {
+      console.error("Subscription creation failed:", error);
+      alert("Failed to initiate payment. Please try again.");
+      setLoading(false);
+    },
+  });
+
+  const handleBecomeSponsor = () => {
+    setLoading(true);
+    // Hardcoded plan ID for now, or fetch from config
+    // Assuming we have a plan created in Razorpay and DB with this ID
+    // For this implementation, I'll use a placeholder ID "plan_sponsor_monthly"
+    // The user needs to ensure this plan exists in DB.
+    createSubscriptionMutation.mutate({ planId: "plan_sponsor_monthly" });
+  };
+
   return (
     <>
-      <main className="min-h-screen bg-black text-white pt-32 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
+      <main className="min-h-screen bg-black text-white pt-32 pb-20 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden isolate">
+        <div className="absolute top-0 left-0 w-full h-[50dvh] lg:h-[69dvh] -z-10 overflow-hidden">
+          <Image
+            src="/assets/bgmain.svg"
+            alt="background"
+            fill
+            className="object-cover max-md:object-top opacity-90"
+            priority
+          />
+          <div className="absolute h-[50%] w-full bg-gradient-to-t from-black via-transparent to-transparent bottom-0 left-1/2 -translate-x-1/2"></div>
+        </div>
         <div className="max-w-5xl mx-auto flex flex-col items-center">
           {/* Hero Section */}
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
@@ -250,15 +313,25 @@ const SponsorPage = () => {
                   </div>
 
                   <div className="pt-2 w-full flex justify-center">
-                    <Link
-                      href="mailto:hi@opensox.ai"
-                      className="w-full sm:w-auto"
+                    <PrimaryButton
+                      onClick={handleBecomeSponsor}
+                      disabled={
+                        loading ||
+                        createSubscriptionMutation.isPending ||
+                        isPaymentLoading
+                      }
+                      classname="rounded-xl w-full sm:w-auto text-sm sm:text-base py-4 px-8 bg-[#4dd0a4] bg-none border-none shadow-none text-black flex items-center justify-center"
                     >
-                      <PrimaryButton classname="rounded-xl w-full sm:w-auto text-sm sm:text-base py-4 px-8">
-                        Become a Sponsor — $500/mo
+                      {loading ||
+                      createSubscriptionMutation.isPending ||
+                      isPaymentLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      ) : null}
+                      Become a Sponsor — $500/mo
+                      {!loading && !createSubscriptionMutation.isPending && (
                         <ArrowRight className="w-4 h-4 ml-2" />
-                      </PrimaryButton>
-                    </Link>
+                      )}
+                    </PrimaryButton>
                   </div>
 
                   <p className="text-neutral-500 text-xs md:text-sm mt-6">
