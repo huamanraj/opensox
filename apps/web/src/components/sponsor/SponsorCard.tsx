@@ -22,7 +22,7 @@ export const SponsorCard: React.FC<SponsorCardProps> = ({ sponsor }) => {
       rel="noopener noreferrer"
       className="group block"
     >
-      <div className="aspect-[16/10] w-full rounded-2xl border border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center justify-center gap-4 p-6 relative overflow-hidden">
+      <div className="aspect-[16/10] w-full rounded-2xl border border-[#252525] bg-neutral-900/20 hover:bg-neutral-900/40 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center justify-center gap-4 p-6 relative overflow-hidden">
         <div className="relative w-32 h-20">
           <Image
             src={sponsor.image_url}
@@ -35,9 +35,6 @@ export const SponsorCard: React.FC<SponsorCardProps> = ({ sponsor }) => {
           <h3 className="text-white font-medium text-lg group-hover:text-green-400 transition-colors">
             {sponsor.company_name}
           </h3>
-          <p className="text-neutral-500 text-sm mt-1 line-clamp-2">
-            {sponsor.description}
-          </p>
         </div>
       </div>
     </Link>

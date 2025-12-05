@@ -13,19 +13,16 @@ const SponsorSection = () => {
     return null; // Or a skeleton
   }
 
-  // If no sponsors, show placeholder or nothing?
-  // User said: "If no sponsors → show 'your ad here' placeholder"
-
   const hasSponsors = sponsors && sponsors.length > 0;
 
   return (
-    <section className="w-full py-20 px-4 md:px-8 border-b border-[#252525] bg-[#0A0A0A]">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+    <section className="w-full py-16 lg:py-24 px-4 lg:px-[60px] border-b border-[#252525] flex flex-col items-center justify-center gap-10">
+      <div className="w-full max-w-7xl mx-auto space-y-10">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl md:text-5xl font-medium tracking-tighter text-white">
             Our Sponsors
           </h2>
-          <p className="text-neutral-400">
+          <p className="text-neutral-400 text-lg max-w-2xl mx-auto">
             Supported by these amazing companies
           </p>
         </div>
@@ -36,13 +33,9 @@ const SponsorSection = () => {
               <SponsorCard key={sponsor.id} sponsor={sponsor} />
             ))}
 
-          {/* Placeholder slot if less than 3 sponsors or always show one? */}
-          {/* User said: "If no sponsors -> show 'your ad here' placeholder" */}
-          {/* Let's show a placeholder if we have fewer than 3 sponsors, or at least one if none */}
-
           {(!hasSponsors || sponsors.length < 3) && (
             <Link href="/sponsor" className="group block h-full">
-              <div className="aspect-[16/10] w-full h-full rounded-2xl border border-dashed border-neutral-800 bg-neutral-900/20 hover:bg-neutral-900/40 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-6">
+              <div className="aspect-[16/10] w-full h-full rounded-2xl border border-dashed border-[#252525] bg-neutral-900/20 hover:bg-neutral-900/40 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-6">
                 <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <span className="text-2xl text-neutral-500">+</span>
                 </div>
