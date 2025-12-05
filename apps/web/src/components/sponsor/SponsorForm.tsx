@@ -26,9 +26,10 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const submitAssetsMutation = (trpc.sponsor.submitAssets as any).useMutation({
+  const submitAssetsMutation = trpc.sponsor.submitAssets.useMutation({
     onSuccess: () => {
-      router.push("/dashboard/home");
+      // redirect to landing page after successful submission
+      router.push("/");
       router.refresh();
     },
   });
@@ -42,64 +43,33 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
     },
   });
 
+  const uploadImageMutation = trpc.sponsor.uploadImage.useMutation();
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // validate file size (e.g. 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size too large. Max 5MB allowed.");
+      return;
+    }
+
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "opensox_sponsor"); // Make sure this preset exists or use signed upload
 
     try {
-      // Using unsigned upload for simplicity, or we can create an API endpoint for signed upload
-      // For now, let's assume we have an endpoint or use direct upload if configured
-      // Since the plan mentioned "Cloudinary upload endpoint" in backend tasks but I didn't create a specific one,
-      // I'll use a direct fetch to Cloudinary if preset is available, OR better, use a backend endpoint.
-      // I'll use a backend endpoint approach if I had created one, but I didn't explicitly create a separate upload router.
-      // I'll use a standard fetch to a new API route I'll create or just use the existing pattern if any.
-      // Let's assume we upload to a Next.js API route that handles Cloudinary.
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
 
-      // Actually, I'll implement a simple direct upload here for now using the cloud name from env if possible,
-      // but env vars on client side need NEXT_PUBLIC_ prefix.
-      // If not available, I should have created a backend endpoint.
-      // Let's create a simple backend endpoint for signing or uploading.
-      // For now, I will mock the upload or try to use a generic upload endpoint if it exists.
-
-      // WAIT, I missed "Implement Cloudinary Upload API" in the backend implementation step.
-      // I marked it as done in task.md but I didn't actually write `upload.router.ts` or similar.
-      // I should probably add a presigned URL generator or upload handler in `sponsor.router.ts`.
-
-      // Let's fix this by adding `getUploadSignature` to `sponsor.router.ts` later.
-      // For now, I'll assume I can upload to `/api/upload` if it exists, or I'll add it.
-      // Checking `apps/api/src/routers` I didn't see an upload router.
-
-      // I will implement the form assuming I'll add the upload logic.
-      // I'll use a placeholder for now and fix the backend in the next step.
-
-      // TEMPORARY: using a direct upload to a hypothetical endpoint
-      // If that fails, I'll need to fix it.
-      // Let's just assume we have a `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
-
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-      if (cloudName && uploadPreset) {
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const data = await response.json();
-        setImageUrl(data.secure_url);
-      } else {
-        // Fallback or error
-        console.error("Cloudinary config missing");
-      }
+      const result = await uploadImageMutation.mutateAsync({ file: base64 });
+      setImageUrl(result.url);
     } catch (error) {
       console.error("Upload failed", error);
+      alert("Failed to upload image. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -119,101 +89,243 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
   };
 
   return (
-    <div className="max-w-md mx-auto bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
-      <h2 className="text-2xl font-bold text-white mb-6">
-        Complete Sponsorship
-      </h2>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-neutral-400 mb-2">
+    <div className="max-w-4xl mx-auto">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Logo Upload Section */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-neutral-300">
             Company Logo
           </label>
-          <div className="flex items-center gap-4">
-            {imageUrl ? (
-              <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-neutral-700">
-                <Image
-                  src={imageUrl}
-                  alt="Logo preview"
-                  fill
-                  className="object-cover"
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upload Area */}
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="logo-upload"
+                disabled={uploading}
+              />
+              <label
+                htmlFor="logo-upload"
+                className={`
+                  flex flex-col items-center justify-center w-full h-48 
+                  border-2 border-dashed rounded-2xl cursor-pointer
+                  transition-all duration-200
+                  ${
+                    imageUrl
+                      ? "border-neutral-700 bg-neutral-900/30"
+                      : "border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-900/70"
+                  }
+                  ${uploading ? "opacity-50 cursor-not-allowed" : ""}
+                `}
+              >
+                {uploading ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-8 h-8 text-[#4dd0a4] animate-spin" />
+                    <p className="text-sm text-neutral-400">Uploading...</p>
+                  </div>
+                ) : !imageUrl ? (
+                  <div className="flex flex-col items-center gap-3 px-4">
+                    <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-neutral-400" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white">
+                        Click to upload logo
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        SVG, PNG, JPG (max. 5MB)
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-[#4dd0a4]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-neutral-400">
+                      Click to change logo
+                    </p>
+                  </div>
+                )}
+              </label>
+            </div>
+
+            {/* Preview Area */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-neutral-300">Preview</p>
+              <div className="w-full h-48 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center overflow-hidden">
+                {imageUrl ? (
+                  <div className="relative w-full h-full p-8">
+                    <Image
+                      src={imageUrl}
+                      alt="Logo preview"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center px-4">
+                    <div className="w-16 h-16 mx-auto rounded-lg bg-neutral-800/50 flex items-center justify-center mb-3">
+                      <svg
+                        className="w-8 h-8 text-neutral-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-xs text-neutral-500">
+                      Your logo will appear here
+                    </p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="w-20 h-20 rounded-lg bg-neutral-800 flex items-center justify-center border border-dashed border-neutral-600">
-                <Upload className="w-6 h-6 text-neutral-500" />
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-white hover:file:bg-neutral-700"
-            />
+            </div>
           </div>
-          {uploading && (
-            <p className="text-xs text-yellow-500 mt-2">Uploading...</p>
-          )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-neutral-400 mb-2">
-            Company Name
-          </label>
-          <input
-            {...form.register("companyName")}
-            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 outline-none"
-            placeholder="Acme Corp"
-          />
-          {form.formState.errors.companyName && (
-            <p className="text-xs text-red-500 mt-1">
-              {form.formState.errors.companyName.message}
-            </p>
-          )}
+        {/* Company Details Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Company Name */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-neutral-300">
+              Company Name
+            </label>
+            <input
+              {...form.register("companyName")}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 outline-none transition-colors"
+              placeholder="Acme Corporation"
+            />
+            {form.formState.errors.companyName && (
+              <p className="text-xs text-red-400 flex items-center gap-1">
+                <svg
+                  className="w-3 h-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {form.formState.errors.companyName.message}
+              </p>
+            )}
+          </div>
+
+          {/* Website URL */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-neutral-300">
+              Website URL
+            </label>
+            <input
+              {...form.register("website")}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 outline-none transition-colors"
+              placeholder="https://acme.com"
+            />
+            {form.formState.errors.website && (
+              <p className="text-xs text-red-400 flex items-center gap-1">
+                <svg
+                  className="w-3 h-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {form.formState.errors.website.message}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-neutral-400 mb-2">
-            Description
+        {/* Description - Full Width */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-neutral-300">
+            Company Description
           </label>
           <textarea
             {...form.register("description")}
-            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 outline-none h-24 resize-none"
-            placeholder="Brief description of your company..."
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 outline-none transition-colors resize-none"
+            placeholder="Tell us about your company and what you do..."
+            rows={4}
           />
           {form.formState.errors.description && (
-            <p className="text-xs text-red-500 mt-1">
+            <p className="text-xs text-red-400 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
               {form.formState.errors.description.message}
             </p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-neutral-400 mb-2">
-            Website URL
-          </label>
-          <input
-            {...form.register("website")}
-            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 outline-none"
-            placeholder="https://example.com"
-          />
-          {form.formState.errors.website && (
-            <p className="text-xs text-red-500 mt-1">
-              {form.formState.errors.website.message}
+        {/* Submit Button */}
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={submitAssetsMutation.isPending || uploading || !imageUrl}
+            className="w-full sm:w-auto sm:min-w-[200px] bg-[#4dd0a4] text-black font-semibold py-3.5 px-8 rounded-xl hover:bg-[#3db08a] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+          >
+            {submitAssetsMutation.isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Submitting...</span>
+              </>
+            ) : (
+              <>
+                <span>Submit Sponsorship</span>
+                <svg
+                  className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </>
+            )}
+          </button>
+          {!imageUrl && (
+            <p className="text-xs text-neutral-500 mt-3">
+              Please upload your company logo to continue
             </p>
           )}
         </div>
-
-        <button
-          type="submit"
-          disabled={submitAssetsMutation.isPending || uploading}
-          className="w-full bg-[#4dd0a4] text-black font-bold py-3 rounded-xl hover:bg-[#3db08a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
-          {submitAssetsMutation.isPending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            "Submit Assets"
-          )}
-        </button>
       </form>
     </div>
   );

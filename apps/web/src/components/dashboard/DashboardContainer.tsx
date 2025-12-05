@@ -10,7 +10,6 @@ import SpinnerElm from "../ui/SpinnerElm";
 import { usePathname } from "next/navigation";
 
 import DashboardSponsorList from "./DashboardSponsorList";
-import DashboardSponsorReminder from "./DashboardSponsorReminder";
 
 export default function DashboardContainer() {
   const { renderProjects } = useRenderProjects();
@@ -30,7 +29,6 @@ export default function DashboardContainer() {
           <>
             {!isProjectsPage && (
               <div className="px-4 md:px-8 mt-6">
-                <DashboardSponsorReminder />
                 <DashboardSponsorList />
               </div>
             )}

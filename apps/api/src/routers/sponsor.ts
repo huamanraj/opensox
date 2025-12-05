@@ -1,39 +1,53 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc.js";
+import { router, publicProcedure } from "../trpc.js";
 import { z } from "zod";
 import prismaModule from "../prisma.js";
 import { paymentService } from "../services/payment.service.js";
+import { TRPCError } from "@trpc/server";
+import { rz_instance } from "../clients/razorpay.js";
 
 const { prisma } = prismaModule;
 
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+    api_key: process.env.CLOUDINARY_API_KEY || "",
+    api_secret: process.env.CLOUDINARY_API_SECRET || "",
+});
+
+// fixed monthly subscription amount: $500 = 50000 cents (USD)
+const SPONSOR_MONTHLY_AMOUNT = 50000; // $500 in cents
+const SPONSOR_CURRENCY = "USD";
+
 export const sponsorRouter = router({
-    // Create a subscription for sponsorship
-    createSubscription: protectedProcedure
-        .input(
-            z.object({
-                planId: z.string(),
-            })
-        )
-        .mutation(async ({ ctx, input }: { ctx: any, input: any }) => {
-            const user = ctx.user;
-
-            // Create Razorpay order
-            // Note: In a real scenario, we might want to fetch the plan price from DB
-            // For now, we'll assume a fixed price or fetch from plan
-            const plan = await prisma.plan.findUnique({
-                where: { id: input.planId },
-            });
-
-            if (!plan) {
-                throw new Error("Plan not found");
+    // upload image to cloudinary (public, no auth required)
+    uploadImage: publicProcedure
+        .input(z.object({ file: z.string() }))
+        .mutation(async ({ input }: { input: { file: string } }) => {
+            try {
+                const result = await cloudinary.uploader.upload(input.file, {
+                    folder: "opensox/sponsors",
+                });
+                return { url: result.secure_url };
+            } catch (error) {
+                console.error("cloudinary upload error:", error);
+                throw new Error("image upload failed");
             }
+        }),
+
+    // create payment order for sponsorship (public, no auth required)
+    createSubscription: publicProcedure
+        .mutation(async () => {
+            // generate receipt id
+            const timestamp = Date.now();
+            const randomId = Math.random().toString(36).substring(2, 10);
+            const receipt = `sp_${timestamp}_${randomId}`;
 
             const order = await paymentService.createOrder({
-                amount: plan.price,
-                currency: plan.currency,
-                receipt: `sponsor_${user.id}_${Date.now()}`,
+                amount: SPONSOR_MONTHLY_AMOUNT,
+                currency: SPONSOR_CURRENCY,
+                receipt,
                 notes: {
-                    user_id: user.id,
-                    plan_id: input.planId,
                     type: "sponsor",
                 },
             });
@@ -50,9 +64,120 @@ export const sponsorRouter = router({
             };
         }),
 
-    // Submit sponsor assets
-    // Submit sponsor assets
-    submitAssets: protectedProcedure
+    // verify payment and create sponsor record (public, no auth required)
+    verifyPayment: publicProcedure
+        .input(
+            z.object({
+                razorpay_payment_id: z.string(),
+                razorpay_order_id: z.string(),
+                razorpay_signature: z.string(),
+            })
+        )
+        .mutation(async ({ input }) => {
+            try {
+                // verify signature
+                const isValidSignature = paymentService.verifyPaymentSignature(
+                    input.razorpay_order_id,
+                    input.razorpay_payment_id,
+                    input.razorpay_signature
+                );
+
+                if (!isValidSignature) {
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: "invalid payment signature",
+                    });
+                }
+
+                // check if payment already exists
+                const existingPayment = await prisma.payment.findUnique({
+                    where: { razorpayPaymentId: input.razorpay_payment_id },
+                });
+
+                if (!existingPayment) {
+                    // create payment record without user (userId is optional)
+                    await prisma.payment.create({
+                        data: {
+                            razorpayPaymentId: input.razorpay_payment_id,
+                            razorpayOrderId: input.razorpay_order_id,
+                            amount: SPONSOR_MONTHLY_AMOUNT,
+                            currency: SPONSOR_CURRENCY,
+                            status: "captured",
+                        },
+                    });
+                }
+
+                // fetch payment details from razorpay to get customer contact information
+                let contactName: string | null = null;
+                let contactEmail: string | null = null;
+                let contactPhone: string | null = null;
+
+                try {
+                    const paymentDetails: any = await rz_instance.payments.fetch(input.razorpay_payment_id);
+                    // extract customer details from payment
+                    if (paymentDetails.contact) {
+                        contactPhone = String(paymentDetails.contact);
+                    }
+                    if (paymentDetails.email) {
+                        contactEmail = String(paymentDetails.email);
+                    }
+                    // note: name might not be directly in payment object, check notes or order
+                    if (paymentDetails.notes && paymentDetails.notes.name) {
+                        contactName = String(paymentDetails.notes.name);
+                    }
+                } catch (error) {
+                    console.error("failed to fetch payment details from razorpay:", error);
+                    // continue without contact details if fetch fails
+                }
+
+                // create or update sponsor record with pending_submission status
+                const existingSponsor = await prisma.sponsor.findFirst({
+                    where: { razorpay_payment_id: input.razorpay_payment_id },
+                });
+
+                if (!existingSponsor) {
+                    await prisma.sponsor.create({
+                        data: {
+                            razorpay_payment_id: input.razorpay_payment_id,
+                            plan_status: "pending_submission",
+                            company_name: "",
+                            description: "",
+                            website: "",
+                            image_url: "",
+                            contact_name: contactName,
+                            contact_email: contactEmail,
+                            contact_phone: contactPhone,
+                        },
+                    });
+                } else {
+                    // update existing sponsor with contact details if not already set
+                    await prisma.sponsor.update({
+                        where: { id: existingSponsor.id },
+                        data: {
+                            contact_name: contactName || existingSponsor.contact_name,
+                            contact_email: contactEmail || existingSponsor.contact_email,
+                            contact_phone: contactPhone || existingSponsor.contact_phone,
+                        },
+                    });
+                }
+
+                return {
+                    success: true,
+                    paymentId: input.razorpay_payment_id,
+                };
+            } catch (error) {
+                console.error("error in verifyPayment:", error);
+                if (error instanceof TRPCError) throw error;
+                throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "failed to verify payment",
+                    cause: error,
+                });
+            }
+        }),
+
+    // submit sponsor assets (public, no auth required)
+    submitAssets: publicProcedure
         .input(
             z.object({
                 companyName: z.string(),
@@ -62,82 +187,60 @@ export const sponsorRouter = router({
                 razorpayPaymentId: z.string(),
             })
         )
-        .mutation(async ({ ctx, input }: { ctx: any, input: any }) => {
-            // Verify payment exists and is successful
-            const payment = await prisma.payment.findUnique({
-                where: { razorpayPaymentId: input.razorpayPaymentId },
-            });
-
-            if (!payment || payment.status !== "captured") {
-                throw new Error("Valid payment not found");
-            }
-
-            // Check if this payment belongs to the user
-            if (payment.userId !== ctx.user.id) {
-                throw new Error("Unauthorized");
-            }
-
-            // Upsert sponsor record
-            const existingSponsor = await prisma.sponsor.findFirst({
-                where: { razorpay_payment_id: input.razorpayPaymentId },
-            });
-
-            if (existingSponsor) {
-                return await prisma.sponsor.update({
-                    where: { id: existingSponsor.id },
-                    data: {
-                        company_name: input.companyName,
-                        description: input.description,
-                        website: input.website,
-                        image_url: input.imageUrl,
-                        plan_status: "active",
-                    },
+        .mutation(async ({ input }) => {
+            try {
+                // verify payment exists and is successful
+                const payment = await prisma.payment.findUnique({
+                    where: { razorpayPaymentId: input.razorpayPaymentId },
                 });
-            } else {
-                return await prisma.sponsor.create({
-                    data: {
-                        company_name: input.companyName,
-                        description: input.description,
-                        website: input.website,
-                        image_url: input.imageUrl,
-                        razorpay_payment_id: input.razorpayPaymentId,
-                        plan_status: "active",
-                    },
+
+                if (!payment || payment.status !== "captured") {
+                    throw new TRPCError({
+                        code: "NOT_FOUND",
+                        message: "valid payment not found or not captured",
+                    });
+                }
+
+                // find existing sponsor record
+                const existingSponsor = await prisma.sponsor.findFirst({
+                    where: { razorpay_payment_id: input.razorpayPaymentId },
+                });
+
+                if (existingSponsor) {
+                    return await prisma.sponsor.update({
+                        where: { id: existingSponsor.id },
+                        data: {
+                            company_name: input.companyName,
+                            description: input.description,
+                            website: input.website,
+                            image_url: input.imageUrl,
+                            plan_status: "active",
+                        },
+                    });
+                } else {
+                    return await prisma.sponsor.create({
+                        data: {
+                            razorpay_payment_id: input.razorpayPaymentId,
+                            company_name: input.companyName,
+                            description: input.description,
+                            website: input.website,
+                            image_url: input.imageUrl,
+                            plan_status: "active",
+                        },
+                    });
+                }
+            } catch (error) {
+                console.error("error in submitAssets:", error);
+                if (error instanceof TRPCError) throw error;
+                throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "something went wrong during sponsorship submission",
+                    cause: error,
                 });
             }
         }),
 
-    // Get pending sponsorships for the current user
-    getPendingSponsorship: protectedProcedure.query(async ({ ctx }: { ctx: any }) => {
-        const userPayments = await prisma.payment.findMany({
-            where: {
-                userId: ctx.user.id,
-                status: "captured",
-            },
-            orderBy: { createdAt: "desc" },
-            take: 5,
-        });
-
-        for (const payment of userPayments) {
-            const sponsor = await prisma.sponsor.findFirst({
-                where: { razorpay_payment_id: payment.razorpayPaymentId },
-            });
-
-            if (!sponsor || sponsor.plan_status === "pending_submission") {
-                // Check if this payment is likely for sponsorship (e.g. has subscriptionId)
-                if (payment.subscriptionId) {
-                    return {
-                        paymentId: payment.razorpayPaymentId,
-                        amount: payment.amount,
-                        date: payment.createdAt,
-                    };
-                }
-            }
-        }
-        return null;
-    }),
-
-    // Get active sponsors
+    // get active sponsors (public)
     getActiveSponsors: publicProcedure.query(async () => {
         return await prisma.sponsor.findMany({
             where: {

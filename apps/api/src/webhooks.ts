@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import crypto from "crypto";
 import prismaModule from "./prisma.js";
+import { rz_instance } from "./clients/razorpay.js";
 
 const { prisma } = prismaModule;
 
@@ -44,6 +45,9 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
         console.log(`Received Razorpay webhook: ${eventType}`);
 
         switch (eventType) {
+            case "payment.captured":
+                await handlePaymentCaptured(payload);
+                break;
             case "subscription.charged":
                 await handleSubscriptionCharged(payload);
                 break;
@@ -62,6 +66,98 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 };
+
+// handle payment.captured event for sponsors
+async function handlePaymentCaptured(payload: any) {
+    const payment = payload.payment.entity;
+    const paymentId = payment.id;
+    const orderId = payment.order_id;
+    const amount = payment.amount;
+    const currency = payment.currency;
+
+    // extract customer contact details from payment entity (if available in webhook)
+    let contactName: string | null = null;
+    let contactEmail: string | null = null;
+    let contactPhone: string | null = null;
+
+    if (payment.contact) {
+        contactPhone = payment.contact;
+    }
+    if (payment.email) {
+        contactEmail = payment.email;
+    }
+    if (payment.notes && payment.notes.name) {
+        contactName = payment.notes.name;
+    }
+
+    // if contact details not in webhook payload, fetch from razorpay api
+    if (!contactPhone || !contactEmail) {
+        try {
+            const paymentDetails = await rz_instance.payments.fetch(paymentId);
+            if (paymentDetails.contact && !contactPhone) {
+                contactPhone = paymentDetails.contact;
+            }
+            if (paymentDetails.email && !contactEmail) {
+                contactEmail = paymentDetails.email;
+            }
+            if (paymentDetails.notes && paymentDetails.notes.name && !contactName) {
+                contactName = paymentDetails.notes.name;
+            }
+        } catch (error) {
+            console.error("failed to fetch payment details from razorpay:", error);
+            // continue without contact details if fetch fails
+        }
+    }
+    
+    // check if payment already exists
+    const existingPayment = await prisma.payment.findUnique({
+        where: { razorpayPaymentId: paymentId },
+    });
+
+    if (!existingPayment) {
+        // create payment record without user (for sponsors)
+        await prisma.payment.create({
+            data: {
+                razorpayPaymentId: paymentId,
+                razorpayOrderId: orderId,
+                amount: amount,
+                currency: currency,
+                status: "captured",
+            },
+        });
+    }
+
+    // create or update sponsor record with pending_submission status
+    const existingSponsor = await prisma.sponsor.findFirst({
+        where: { razorpay_payment_id: paymentId },
+    });
+
+    if (!existingSponsor) {
+        await prisma.sponsor.create({
+            data: {
+                razorpay_payment_id: paymentId,
+                plan_status: "pending_submission",
+                company_name: "",
+                description: "",
+                website: "",
+                image_url: "",
+                contact_name: contactName,
+                contact_email: contactEmail,
+                contact_phone: contactPhone,
+            },
+        });
+    } else {
+        // update existing sponsor with contact details if not already set
+        await prisma.sponsor.update({
+            where: { id: existingSponsor.id },
+            data: {
+                contact_name: contactName || existingSponsor.contact_name,
+                contact_email: contactEmail || existingSponsor.contact_email,
+                contact_phone: contactPhone || existingSponsor.contact_phone,
+            },
+        });
+    }
+}
 
 async function handleSubscriptionCharged(payload: any) {
     const payment = payload.payment.entity;

@@ -38,13 +38,14 @@ const SponsorSubmitPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-4">
-      <div className="max-w-3xl mx-auto text-center mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">
+    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto text-center mb-16 space-y-4">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
           Thank you for your sponsorship!
         </h1>
-        <p className="text-neutral-400 text-lg">
-          Please upload your company assets to complete the process.
+        <p className="text-base md:text-lg text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+          Please complete the form below with your company details. Your
+          sponsorship will go live within 2-3 business days.
         </p>
       </div>
       <SponsorForm razorpayPaymentId={paymentId} />

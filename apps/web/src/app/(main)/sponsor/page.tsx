@@ -19,14 +19,32 @@ const SponsorPage = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const verifyPaymentMutation = trpc.sponsor.verifyPayment.useMutation({
+    onSuccess: (data) => {
+      // redirect to submission page with payment id after verification
+      router.push(
+        `/sponsor/submit?paymentId=${data.paymentId}`
+      );
+    },
+    onError: (error) => {
+      console.error("payment verification failed:", error);
+      alert("payment verification failed: " + error.message);
+      setLoading(false);
+    },
+  });
+
   const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay({
     onSuccess: (response) => {
-      // Redirect to submission page with payment ID
-      router.push(`/sponsor/submit?paymentId=${response.razorpay_payment_id}`);
+      // verify payment on backend
+      verifyPaymentMutation.mutate({
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_signature: response.razorpay_signature,
+      });
     },
     onFailure: (error) => {
-      console.error("Payment failed:", error);
-      alert("Payment failed: " + error.message);
+      console.error("payment failed:", error);
+      alert("payment failed: " + error.message);
       setLoading(false);
     },
     onDismiss: () => {
@@ -34,41 +52,43 @@ const SponsorPage = () => {
     },
   });
 
-  const createSubscriptionMutation = (
-    trpc.sponsor.createSubscription as any
-  ).useMutation({
+  const createSubscriptionMutation = trpc.sponsor.createSubscription.useMutation({
     onSuccess: async (data: any) => {
       const options = {
         key: data.key,
         amount: data.amount,
         currency: data.currency,
         name: "OpenSox",
-        description: "Sponsorship Subscription",
+        description: "Monthly Sponsorship - $500",
         order_id: data.orderId,
-        prefill: {
-          // We could prefill user details if we had them in context
-        },
         theme: {
           color: "#4dd0a4",
+        },
+        options: {
+          checkout: {
+            method: {
+              netbanking: 1, // enable netbanking
+              card: 1, // enable card payments
+              upi: 1, // enable upi payments
+              wallet: 1, // enable wallet payments
+            },
+          },
         },
       };
 
       await initiatePayment(options);
     },
     onError: (error: any) => {
-      console.error("Subscription creation failed:", error);
-      alert("Failed to initiate payment. Please try again.");
+      console.error("subscription creation failed:", error);
+      alert("failed to initiate payment. please try again.");
       setLoading(false);
     },
   });
 
   const handleBecomeSponsor = () => {
     setLoading(true);
-    // Hardcoded plan ID for now, or fetch from config
-    // Assuming we have a plan created in Razorpay and DB with this ID
-    // For this implementation, I'll use a placeholder ID "plan_sponsor_monthly"
-    // The user needs to ensure this plan exists in DB.
-    createSubscriptionMutation.mutate({ planId: "plan_sponsor_monthly" });
+    // create payment order for $500 monthly sponsorship
+    createSubscriptionMutation.mutate();
   };
 
   return (
