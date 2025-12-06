@@ -164,20 +164,9 @@ async function handleSubscriptionCharged(payload: any) {
     const subscription = payload.subscription.entity;
 
     // Update sponsor status to active if it matches a known subscription
-    // We might need to link subscription ID to sponsor if not already linked
-    // But typically we link via payment ID or subscription ID
+  
 
     const subId = subscription.id;
-
-    // Find sponsor by subscription ID or payment ID
-    // If this is the first payment, we might not have subId in sponsor table yet if we only saved paymentId
-    // But in our flow, we create sponsor record AFTER payment success on frontend, 
-    // or we can create it here if it doesn't exist? 
-    // The user flow says: "Backend stores images + metadata -> Sponsor is marked active"
-    // So the webhook is mainly for RECURRING payments or status updates.
-    // For the initial payment, the frontend calls `submitAssets` which sets it to active.
-
-    // However, if the subscription is charged (renewal), we should ensure it's active.
 
     await prisma.sponsor.updateMany({
         where: {
@@ -196,8 +185,50 @@ async function handleSubscriptionStatusChange(eventType: string, payload: any) {
     let subId = subscription ? subscription.id : null;
 
     // If we don't have subscription entity directly (e.g. payment.failed), try to get from payment
-    if (!subId && payment && payment.description) {
-        // sometimes description contains sub id or we check notes
+    if (!subId && payment) {
+        // Attempt extraction from description: look for Razorpay-style IDs like "sub_XXXXXXXX"
+        const tryExtractSubId = (source: unknown): string | null => {
+            if (!source || typeof source !== "string") return null;
+            // Prefer explicit "sub_" token
+            const explicitMatch = source.match(/\bsub_[a-zA-Z0-9]+\b/);
+            if (explicitMatch && explicitMatch[0].trim().length > 0) return explicitMatch[0];
+
+            return null;
+        };
+
+        // 1) Description
+        const fromDescription = tryExtractSubId(payment.description);
+
+        // 2) Notes.subscription_id (common place to store linkage)
+        let fromNotes: string | null = null;
+        if (payment.notes && typeof payment.notes === "object") {
+            const maybeNoteSubId = (payment.notes as any).subscription_id;
+            if (typeof maybeNoteSubId === "string" && maybeNoteSubId.trim().length > 0) {
+                // Ensure it looks like a subscription id
+                const validated = tryExtractSubId(maybeNoteSubId) ?? maybeNoteSubId;
+                if (typeof validated === "string" && validated.trim().length > 0) {
+                    fromNotes = validated;
+                }
+            } else {
+                // If notes might contain a free-form string, attempt extraction
+                // Some integrations stuff sub_ token in a generic "notes" field
+                for (const k of Object.keys(payment.notes)) {
+                    const val = (payment.notes as any)[k];
+                    const extracted = tryExtractSubId(typeof val === "string" ? val : "");
+                    if (extracted) {
+                        fromNotes = extracted;
+                        break;
+                    }
+                }
+            }
+        } else if (typeof payment.notes === "string") {
+            fromNotes = tryExtractSubId(payment.notes);
+        }
+
+        const candidate = fromDescription || fromNotes;
+        if (typeof candidate === "string" && candidate.trim().length > 0) {
+            subId = candidate.trim();
+        }
     }
 
     if (!subId) return;

@@ -217,34 +217,57 @@ export const sponsorRouter = router({
                     });
                 }
 
-                // find existing sponsor record
-                const existingSponsor = await prisma.sponsor.findFirst({
-                    where: { razorpay_payment_id: input.razorpayPaymentId },
-                });
-
-                if (existingSponsor) {
-                    return await prisma.sponsor.update({
-                        where: { id: existingSponsor.id },
-                        data: {
-                            company_name: input.companyName,
-                            description: input.description,
-                            website: input.website,
-                            image_url: input.imageUrl,
-                            plan_status: "active",
-                        },
-                    });
-                } else {
-                    return await prisma.sponsor.create({
-                        data: {
-                            razorpay_payment_id: input.razorpayPaymentId,
-                            company_name: input.companyName,
-                            description: input.description,
-                            website: input.website,
-                            image_url: input.imageUrl,
-                            plan_status: "active",
-                        },
+                // Fetch payment details from Razorpay to get the linked order_id
+                const rpPayment = await rz_instance.payments.fetch(input.razorpayPaymentId);
+                const linkedOrderId = (rpPayment as any)?.order_id;
+                if (!linkedOrderId) {
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: "payment not linked to a valid order",
                     });
                 }
+
+                // Fetch and validate the order invariants for sponsor plan
+                const order = await rz_instance.orders.fetch(linkedOrderId);
+                if (
+                    !order ||
+                    order.amount !== SPONSOR_MONTHLY_AMOUNT ||
+                    order.currency !== SPONSOR_CURRENCY ||
+                    order.notes?.type !== "sponsor"
+                ) {
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: "invalid order details for sponsor plan",
+                    });
+                }
+
+                // Enforce flow: Sponsor must exist with pending_submission from verifyPayment
+                const existingSponsor = await prisma.sponsor.findFirst({
+                    where: {
+                        razorpay_payment_id: input.razorpayPaymentId,
+                        plan_status: "pending_submission",
+                    },
+                });
+
+                if (!existingSponsor) {
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message:
+                            "sponsorship not in pending submission state; complete verification first",
+                    });
+                }
+
+                // Update sponsor to active with submitted assets
+                return await prisma.sponsor.update({
+                    where: { id: existingSponsor.id },
+                    data: {
+                        company_name: input.companyName,
+                        description: input.description,
+                        website: input.website,
+                        image_url: input.imageUrl,
+                        plan_status: "active",
+                    },
+                });
             } catch (error) {
                 console.error("error in submitAssets:", error);
                 if (error instanceof TRPCError) throw error;
@@ -264,6 +287,14 @@ export const sponsorRouter = router({
             },
             orderBy: {
                 created_at: "desc",
+            },
+            select: {
+                id: true,
+                company_name: true,
+                image_url: true, // public-facing logo/image URL
+                website: true,    // public-facing website URL
+                plan_status: true,
+                created_at: true,
             },
         });
     }),
