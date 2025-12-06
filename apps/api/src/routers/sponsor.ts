@@ -22,11 +22,32 @@ const SPONSOR_CURRENCY = "USD";
 export const sponsorRouter = router({
     // upload image to cloudinary (public, no auth required)
     uploadImage: publicProcedure
-        .input(z.object({ file: z.string() }))
+        .input(
+            z.object({
+                file: z
+                    .string()
+                    .refine(
+                        (val) => {
+                            // Accept data URLs and raw base64 strings; size under 5MB
+                            const isDataUrl = /^data:.*;base64,/.test(val);
+                            const base64Payload = isDataUrl ? val.split(",")[1] ?? "" : val;
+                            // Base64 size approximation: bytes = (length * 3) / 4
+                            const base64SizeBytes = Math.floor((base64Payload.length * 3) / 4);
+                            const under5MB = base64SizeBytes > 0 && base64SizeBytes < 5 * 1024 * 1024;
+                            // If data URL, ensure it's an image MIME type
+                            const mimeOk = !isDataUrl || /^data:image\/(png|jpe?g|webp);base64,/.test(val);
+                            return under5MB && mimeOk;
+                        },
+                        { message: "file must be an image data URL or base64 under 5MB (png/jpg/jpeg/webp)" }
+                    ),
+            })
+        )
         .mutation(async ({ input }: { input: { file: string } }) => {
             try {
                 const result = await cloudinary.uploader.upload(input.file, {
                     folder: "opensox/sponsors",
+                    resource_type: "image",
+                    allowed_formats: ["jpg", "jpeg", "png", "webp"],
                 });
                 return { url: result.secure_url };
             } catch (error) {
