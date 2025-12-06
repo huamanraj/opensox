@@ -89,45 +89,61 @@ export const sponsorRouter = router({
                     });
                 }
 
-                // check if payment already exists
-                const existingPayment = await prisma.payment.findUnique({
-                    where: { razorpayPaymentId: input.razorpay_payment_id },
-                });
-
-                if (!existingPayment) {
-                    // create payment record without user (userId is optional)
-                    await prisma.payment.create({
-                        data: {
-                            razorpayPaymentId: input.razorpay_payment_id,
-                            razorpayOrderId: input.razorpay_order_id,
-                            amount: SPONSOR_MONTHLY_AMOUNT,
-                            currency: SPONSOR_CURRENCY,
-                            status: "captured",
-                        },
+                // CRITICAL: validate order attributes to prevent replay/misuse
+                const order = await rz_instance.orders.fetch(input.razorpay_order_id);
+                if (
+                    !order ||
+                    order.amount !== SPONSOR_MONTHLY_AMOUNT ||
+                    order.currency !== SPONSOR_CURRENCY ||
+                    order.notes?.type !== "sponsor"
+                ) {
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: "invalid order details",
                     });
                 }
 
-                // fetch payment details from razorpay to get customer contact information
+                // Upsert payment to avoid race conditions / duplicates
+                await prisma.payment.upsert({
+                    where: { razorpayPaymentId: input.razorpay_payment_id },
+                    update: {
+                        razorpayOrderId: input.razorpay_order_id,
+                        amount: SPONSOR_MONTHLY_AMOUNT,
+                        currency: SPONSOR_CURRENCY,
+                        status: "captured",
+                    },
+                    create: {
+                        razorpayPaymentId: input.razorpay_payment_id,
+                        razorpayOrderId: input.razorpay_order_id,
+                        amount: SPONSOR_MONTHLY_AMOUNT,
+                        currency: SPONSOR_CURRENCY,
+                        status: "captured",
+                    },
+                });
+
+                // Fetch payment details with proper typing
+                type RazorpayPaymentDetails = {
+                    contact?: string | number;
+                    email?: string;
+                    notes?: { name?: string } | null;
+                };
+
+                const paymentDetails = (await rz_instance.payments.fetch(
+                    input.razorpay_payment_id
+                )) as RazorpayPaymentDetails;
+
                 let contactName: string | null = null;
                 let contactEmail: string | null = null;
                 let contactPhone: string | null = null;
 
-                try {
-                    const paymentDetails: any = await rz_instance.payments.fetch(input.razorpay_payment_id);
-                    // extract customer details from payment
-                    if (paymentDetails.contact) {
-                        contactPhone = String(paymentDetails.contact);
-                    }
-                    if (paymentDetails.email) {
-                        contactEmail = String(paymentDetails.email);
-                    }
-                    // note: name might not be directly in payment object, check notes or order
-                    if (paymentDetails.notes && paymentDetails.notes.name) {
-                        contactName = String(paymentDetails.notes.name);
-                    }
-                } catch (error) {
-                    console.error("failed to fetch payment details from razorpay:", error);
-                    // continue without contact details if fetch fails
+                if (paymentDetails.contact != null) {
+                    contactPhone = String(paymentDetails.contact);
+                }
+                if (paymentDetails.email) {
+                    contactEmail = String(paymentDetails.email);
+                }
+                if (paymentDetails.notes?.name) {
+                    contactName = String(paymentDetails.notes.name);
                 }
 
                 // create or update sponsor record with pending_submission status

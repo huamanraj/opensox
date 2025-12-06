@@ -36,6 +36,7 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       companyName: "",
       description: "",
@@ -87,6 +88,17 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
       razorpayPaymentId,
     });
   };
+
+  // watch form values to check if all fields are completed
+  const watchedValues = form.watch();
+  const isFormValid =
+    watchedValues.companyName?.trim().length >= 2 &&
+    watchedValues.description?.trim().length >= 10 &&
+    watchedValues.website?.trim().length > 0 &&
+    form.formState.isValid &&
+    imageUrl &&
+    !uploading;
+  const isSubmitting = submitAssetsMutation.isPending;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -293,10 +305,10 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
         <div className="pt-4">
           <button
             type="submit"
-            disabled={submitAssetsMutation.isPending || uploading || !imageUrl}
-            className="w-full sm:w-auto sm:min-w-[200px] bg-[#4dd0a4] text-black font-semibold py-3.5 px-8 rounded-xl hover:bg-[#3db08a] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+            disabled={!isFormValid || isSubmitting}
+            className="w-full sm:w-auto sm:min-w-[200px] bg-primary text-primary-foreground font-semibold py-3.5 px-8 rounded-lg hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
           >
-            {submitAssetsMutation.isPending ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Submitting...</span>
@@ -320,9 +332,9 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
               </>
             )}
           </button>
-          {!imageUrl && (
+          {(!isFormValid || !imageUrl) && (
             <p className="text-xs text-neutral-500 mt-3">
-              Please upload your company logo to continue
+              Please complete all fields to submit
             </p>
           )}
         </div>

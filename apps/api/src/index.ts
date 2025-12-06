@@ -14,8 +14,18 @@ import crypto from "crypto";
 import { paymentService } from "./services/payment.service.js";
 import { verifyToken } from "./utils/auth.js";
 import { SUBSCRIPTION_STATUS } from "./constants/subscription.js";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { handleRazorpayWebhook } from "./webhooks.js";
 
 dotenv.config();
+
+// Configure Cloudinary (kept local to this route)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+  api_key: process.env.CLOUDINARY_API_KEY || "",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "",
+});
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -62,8 +72,9 @@ const apiLimiter = rateLimit({
 
 // Request size limits (except for webhook - needs raw body)
 app.use("/webhook/razorpay", express.raw({ type: "application/json" }));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+// Reduce global JSON/urlencoded limits to prevent DoS
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ limit: "5mb", extended: true }));
 
 // CORS configuration
 const corsOptions: CorsOptionsType = {
@@ -97,6 +108,61 @@ app.get("/admin/blocked-ips", (req: Request, res: Response) => {
 app.get("/test", apiLimiter, (req: Request, res: Response) => {
   res.status(200).json({ status: "ok", message: "Test endpoint is working" });
 });
+
+// Secure multipart upload setup with strict validation
+const upload = multer({
+  storage: multer.memoryStorage(), // avoid temp files; stream to Cloudinary
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB per-file limit for this endpoint
+    files: 1,
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowed.includes(file.mimetype)) {
+      return cb(new Error("Invalid file type"));
+    }
+    cb(null, true);
+  },
+});
+
+// Dedicated upload endpoint that only accepts multipart/form-data
+app.post(
+  "/upload/sponsor-image",
+  apiLimiter,
+  (req, res, next) => {
+    if (!req.is("multipart/form-data")) {
+      return res.status(415).json({ error: "Unsupported Media Type. Use multipart/form-data." });
+    }
+    next();
+  },
+  upload.single("file"),
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      // Stream upload to Cloudinary
+      const folder = "opensox/sponsors";
+      const result = await new Promise<any>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ folder }, (error, uploadResult) => {
+          if (error) return reject(error);
+          resolve(uploadResult);
+        });
+        stream.end(req.file.buffer);
+      });
+
+      return res.status(200).json({
+        url: result.secure_url,
+        bytes: req.file.size,
+        mimetype: req.file.mimetype,
+      });
+    } catch (err: any) {
+      const isLimit = err?.message?.toLowerCase()?.includes("file too large");
+      return res.status(isLimit ? 413 : 400).json({ error: err.message || "Upload failed" });
+    }
+  }
+);
 
 // Slack Community Invite Endpoint (Protected)
 app.get("/join-community", apiLimiter, async (req: Request, res: Response) => {
@@ -152,8 +218,6 @@ app.get("/join-community", apiLimiter, async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
-
-import { handleRazorpayWebhook } from "./webhooks.js";
 
 // Razorpay Webhook Handler
 app.post("/webhook/razorpay", handleRazorpayWebhook);

@@ -29,7 +29,13 @@ const SponsorSubmitPage = () => {
         </p>
         <button
           onClick={() => router.push("/sponsor")}
-          className="bg-[#4dd0a4] text-black font-bold py-2 px-6 rounded-lg"
+          className="
+            bg-primary text-primary-foreground
+            font-bold py-2 px-6 rounded-lg
+            hover:bg-primary/90
+            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background
+            transition-colors
+          "
         >
           Go to Sponsor Page
         </button>
