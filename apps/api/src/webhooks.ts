@@ -81,7 +81,7 @@ async function handlePaymentCaptured(payload: any) {
     let contactPhone: string | null = null;
 
     if (payment.contact) {
-        contactPhone = payment.contact;
+        contactPhone = String(payment.contact);
     }
     if (payment.email) {
         contactEmail = payment.email;
@@ -95,7 +95,7 @@ async function handlePaymentCaptured(payload: any) {
         try {
             const paymentDetails = await rz_instance.payments.fetch(paymentId);
             if (paymentDetails.contact && !contactPhone) {
-                contactPhone = paymentDetails.contact;
+                contactPhone = String(paymentDetails.contact);
             }
             if (paymentDetails.email && !contactEmail) {
                 contactEmail = paymentDetails.email;

@@ -142,6 +142,8 @@ app.post(
         return res.status(400).json({ error: "No file provided" });
       }
 
+      const file = req.file; // narrow for TypeScript across closures
+
       // Stream upload to Cloudinary
       const folder = "opensox/sponsors";
       const result = await new Promise<any>((resolve, reject) => {
@@ -149,13 +151,13 @@ app.post(
           if (error) return reject(error);
           resolve(uploadResult);
         });
-        stream.end(req.file.buffer);
+        stream.end(file.buffer);
       });
 
       return res.status(200).json({
         url: result.secure_url,
-        bytes: req.file.size,
-        mimetype: req.file.mimetype,
+        bytes: file.size,
+        mimetype: file.mimetype,
       });
     } catch (err: any) {
       const isLimit = err?.message?.toLowerCase()?.includes("file too large");
