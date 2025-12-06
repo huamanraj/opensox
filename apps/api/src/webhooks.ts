@@ -109,23 +109,23 @@ async function handlePaymentCaptured(payload: any) {
         }
     }
     
-    // check if payment already exists
-    const existingPayment = await prisma.payment.findUnique({
+    // upsert payment to make webhook handling idempotent under retries
+    await prisma.payment.upsert({
         where: { razorpayPaymentId: paymentId },
+        update: {
+            razorpayOrderId: orderId,
+            amount,
+            currency,
+            status: "captured",
+        },
+        create: {
+            razorpayPaymentId: paymentId,
+            razorpayOrderId: orderId,
+            amount,
+            currency,
+            status: "captured",
+        },
     });
-
-    if (!existingPayment) {
-        // create payment record without user (for sponsors)
-        await prisma.payment.create({
-            data: {
-                razorpayPaymentId: paymentId,
-                razorpayOrderId: orderId,
-                amount: amount,
-                currency: currency,
-                status: "captured",
-            },
-        });
-    }
 
     // create or update sponsor record with pending_submission status
     const existingSponsor = await prisma.sponsor.findFirst({
@@ -249,4 +249,3 @@ async function handleSubscriptionStatusChange(eventType: string, payload: any) {
     });
 }
 
-// No changes required for webhook handlers in this change set.

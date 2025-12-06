@@ -20,11 +20,26 @@ import { handleRazorpayWebhook } from "./webhooks.js";
 
 dotenv.config();
 
-// Configure Cloudinary (kept local to this route)
+// validate required environment variables early
+const requiredEnv = [
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
+  "RAZORPAY_WEBHOOK_SECRET",
+] as const;
+
+for (const key of requiredEnv) {
+  if (!process.env[key] || process.env[key]!.trim().length === 0) {
+    console.error(`missing required env var: ${key}`);
+    process.exit(1);
+  }
+}
+
+// configure cloudinary (kept local to this route)
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
-  api_key: process.env.CLOUDINARY_API_KEY || "",
-  api_secret: process.env.CLOUDINARY_API_SECRET || "",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
 const app = express();
