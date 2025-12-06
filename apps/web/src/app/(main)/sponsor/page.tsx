@@ -256,9 +256,7 @@ const SponsorPage = () => {
                   When will my sponsorship go live?
                 </AccordionTrigger>
                 <AccordionContent className="text-neutral-400 text-base pb-6">
-                  Your sponsorship will typically go live within 2-3 business
-                  days after we receive your payment and logo assets. We will
-                  notify you via email once it is up.
+                  Your sponsorship will be live immediately after payment automatically.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem
@@ -355,8 +353,7 @@ const SponsorPage = () => {
                   </div>
 
                   <p className="text-neutral-500 text-xs md:text-sm mt-6">
-                    Your sponsorship will be live within 2-3 business days after
-                    payment and logo submission.
+                    Your sponsorship will be live immediately after payment automatically.
                   </p>
                 </div>
               </div>

@@ -29,26 +29,28 @@ const SponsorSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {hasSponsors &&
-            sponsors.map((sponsor) => (
+            sponsors.slice(0, 3).map((sponsor) => (
               <SponsorCard key={sponsor.id} sponsor={sponsor} />
             ))}
 
-          {(!hasSponsors || sponsors.length < 3) && (
-            <Link href="/sponsor" className="group block h-full">
-              <div className="aspect-[16/10] w-full h-full rounded-2xl border border-dashed border-[#252525] bg-neutral-900/20 hover:bg-neutral-900/40 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-6">
-                <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl text-neutral-500">+</span>
+          {Array.from({ length: Math.max(0, 3 - (sponsors?.length || 0)) }).map(
+            (_, index) => (
+              <Link key={`placeholder-${index}`} href="/sponsor" className="group block h-full">
+                <div className="aspect-[16/10] w-full h-full rounded-2xl border border-dashed border-[#252525] bg-neutral-900/20 hover:bg-neutral-900/40 hover:border-neutral-700 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-6">
+                  <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-2xl text-neutral-500">+</span>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-neutral-400 font-medium group-hover:text-white transition-colors">
+                      Become a Sponsor
+                    </h3>
+                    <p className="text-neutral-600 text-sm mt-1">
+                      Your logo here
+                    </p>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <h3 className="text-neutral-400 font-medium group-hover:text-white transition-colors">
-                    Become a Sponsor
-                  </h3>
-                  <p className="text-neutral-600 text-sm mt-1">
-                    Your logo here
-                  </p>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            )
           )}
         </div>
       </div>
