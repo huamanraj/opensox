@@ -162,7 +162,7 @@ const SponsorSubmitPage = () => {
         </h1>
         <p className="text-base md:text-lg text-neutral-400 max-w-2xl mx-auto leading-relaxed">
           Please complete the form below with your company details. Your
-          sponsorship will go live within 2-3 business days.
+          sponsorship will go live immediately after submission.
         </p>
       </div>
       <SponsorForm razorpayPaymentId={paymentId} />

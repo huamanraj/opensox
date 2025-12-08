@@ -14,6 +14,13 @@ import Image from "next/image";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 import { useRazorpay } from "@/hooks/useRazorpay";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "../../../api/src/routers/_app";
+
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+
+// Extract planId from environment variable with runtime validation
+const SPONSOR_PLAN_ID = process.env.NEXT_PUBLIC_SPONSOR_PLAN_ID || "";
 
 const SponsorPage = () => {
   const [loading, setLoading] = useState(false);
@@ -52,7 +59,9 @@ const SponsorPage = () => {
 
   const createSubscriptionMutation =
     trpc.sponsor.createSubscription.useMutation({
-      onSuccess: async (data: any) => {
+      onSuccess: async (
+        data: RouterOutputs["sponsor"]["createSubscription"]
+      ) => {
         const options = {
           key: data.key,
           name: "OpenSox",
@@ -75,7 +84,7 @@ const SponsorPage = () => {
 
         await initiatePayment(options);
       },
-      onError: (error: any) => {
+      onError: (error) => {
         console.error("subscription creation failed:", error);
         alert("failed to initiate payment. please try again.");
         setLoading(false);
@@ -83,9 +92,18 @@ const SponsorPage = () => {
     });
 
   const handleBecomeSponsor = () => {
+    // Validate planId is configured before proceeding
+    if (!SPONSOR_PLAN_ID) {
+      console.error(
+        "❌ CONFIGURATION ERROR: NEXT_PUBLIC_SPONSOR_PLAN_ID is not set in environment variables"
+      );
+      alert("Sponsor plan is not configured. Please contact support.");
+      return;
+    }
+
     setLoading(true);
-    // create payment order for $500 monthly sponsorship
-    createSubscriptionMutation.mutate({ planId: "plan_RpFPgf6GGzMlPG" });
+    // create payment order for $500 monthly sponsorship using env-backed planId
+    createSubscriptionMutation.mutate({ planId: SPONSOR_PLAN_ID });
   };
 
   return (

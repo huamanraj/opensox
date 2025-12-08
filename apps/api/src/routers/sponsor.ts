@@ -95,6 +95,31 @@ export const sponsorRouter = router({
         )
         .mutation(async ({ input }) => {
             try {
+                // Validate that the sponsor plan is configured
+                if (!SPONSOR_PLAN_ID) {
+                    console.error("❌ SPONSOR_PLAN_ID not configured in environment");
+                    throw new TRPCError({
+                        code: "INTERNAL_SERVER_ERROR",
+                        message: "sponsor plan not configured on server",
+                    });
+                }
+
+                // Validate that the planId matches the configured sponsor plan
+                if (input.planId !== SPONSOR_PLAN_ID) {
+                    console.error(
+                        "🚨 SECURITY: Invalid planId attempt detected",
+                        {
+                            received: input.planId,
+                            expected: SPONSOR_PLAN_ID,
+                            timestamp: new Date().toISOString(),
+                        }
+                    );
+                    throw new TRPCError({
+                        code: "FORBIDDEN",
+                        message: "invalid plan selected; only the configured sponsor plan is allowed",
+                    });
+                }
+
                 const subscription = await rz_instance.subscriptions.create({
                     plan_id: input.planId,
                     total_count: 12,
@@ -112,6 +137,7 @@ export const sponsorRouter = router({
                 };
             } catch (error) {
                 console.error("failed to create sponsor subscription:", error);
+                if (error instanceof TRPCError) throw error;
                 throw new TRPCError({
                     code: "INTERNAL_SERVER_ERROR",
                     message: "failed to create sponsor subscription",
