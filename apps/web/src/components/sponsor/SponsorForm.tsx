@@ -25,12 +25,17 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const submitAssetsMutation = trpc.sponsor.submitAssets.useMutation({
     onSuccess: () => {
       // redirect to landing page after successful submission
       router.push("/");
       router.refresh();
+    },
+    onError: (error) => {
+      console.error("Submission error:", error);
+      setSubmissionError(error.message);
     },
   });
 
@@ -82,6 +87,7 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
       return;
     }
 
+    setSubmissionError(null);
     submitAssetsMutation.mutate({
       ...values,
       imageUrl,
@@ -102,15 +108,102 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Error Message */}
+      {submissionError && (
+        <div className="mb-8 bg-red-500/10 border border-red-500/20 rounded-2xl p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <svg
+              className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div className="flex-1">
+              <h3 className="text-red-500 font-semibold mb-2">
+                Submission Error
+              </h3>
+              <p className="text-neutral-300 text-sm mb-4">{submissionError}</p>
+
+              {submissionError.includes("pending submission") && (
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-3">
+                  <p className="text-sm font-semibold text-white">
+                    Contact our team for assistance
+                  </p>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-green-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <a
+                        href="mailto:hi@opensox.ai"
+                        className="text-white hover:text-green-400 transition-colors"
+                      >
+                        hi@opensox.ai
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-green-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
+                      </svg>
+                      <a
+                        href="tel:+918447500346"
+                        className="text-white hover:text-green-400 transition-colors"
+                      >
+                        +91 844-7500-346
+                      </a>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-neutral-500 mt-3 pt-3 border-t border-neutral-800">
+                    Payment ID:{" "}
+                    <code className="bg-neutral-800 px-2 py-0.5 rounded text-xs">
+                      {razorpayPaymentId}
+                    </code>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {/* Logo Upload Section */}
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-neutral-300">
-            Company Logo
-          </label>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Upload Area */}
-            <div className="relative">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-neutral-300">
+                Company Logo
+              </label>
               <input
                 type="file"
                 accept="image/*"
@@ -178,7 +271,7 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
             </div>
 
             {/* Preview Area */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-300">Preview</p>
               <div className="w-full h-48 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center overflow-hidden">
                 {imageUrl ? (

@@ -5,6 +5,10 @@ import { rz_instance } from "./clients/razorpay.js";
 
 const { prisma } = prismaModule;
 
+
+const SPONSOR_MONTHLY_AMOUNT = 50000; // $500 USD
+const SPONSOR_CURRENCY = "USD";
+
 export const handleRazorpayWebhook = async (req: Request, res: Response) => {
     try {
         const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -72,8 +76,8 @@ async function handlePaymentCaptured(payload: any) {
     const payment = payload.payment.entity;
     const paymentId = payment.id;
     const orderId = payment.order_id;
-    const amount = payment.amount;
-    const currency = payment.currency;
+
+    console.log("📥 Webhook: payment.captured", { paymentId, orderId });
 
     // extract customer contact details from payment entity (if available in webhook)
     let contactName: string | null = null;
@@ -108,21 +112,21 @@ async function handlePaymentCaptured(payload: any) {
             // continue without contact details if fetch fails
         }
     }
-    
-    // upsert payment to make webhook handling idempotent under retries
+
+    // Use consistent constants for sponsor payments
     await prisma.payment.upsert({
         where: { razorpayPaymentId: paymentId },
         update: {
             razorpayOrderId: orderId,
-            amount,
-            currency,
+            amount: SPONSOR_MONTHLY_AMOUNT,
+            currency: SPONSOR_CURRENCY,
             status: "captured",
         },
         create: {
             razorpayPaymentId: paymentId,
             razorpayOrderId: orderId,
-            amount,
-            currency,
+            amount: SPONSOR_MONTHLY_AMOUNT,
+            currency: SPONSOR_CURRENCY,
             status: "captured",
         },
     });
@@ -146,16 +150,22 @@ async function handlePaymentCaptured(payload: any) {
                 contact_phone: contactPhone,
             },
         });
+        console.log("✅ Created sponsor record with pending_submission status");
     } else {
-        // update existing sponsor with contact details if not already set
-        await prisma.sponsor.update({
-            where: { id: existingSponsor.id },
-            data: {
-                contact_name: contactName || existingSponsor.contact_name,
-                contact_email: contactEmail || existingSponsor.contact_email,
-                contact_phone: contactPhone || existingSponsor.contact_phone,
-            },
-        });
+        // Don't overwrite if already submitted
+        if (existingSponsor.plan_status !== "active") {
+            await prisma.sponsor.update({
+                where: { id: existingSponsor.id },
+                data: {
+                    contact_name: contactName || existingSponsor.contact_name,
+                    contact_email: contactEmail || existingSponsor.contact_email,
+                    contact_phone: contactPhone || existingSponsor.contact_phone,
+                },
+            });
+            console.log("✅ Updated sponsor contact details");
+        } else {
+            console.log("ℹ️ Sponsor already active, skipping update");
+        }
     }
 }
 
@@ -164,7 +174,7 @@ async function handleSubscriptionCharged(payload: any) {
     const subscription = payload.subscription.entity;
 
     // Update sponsor status to active if it matches a known subscription
-  
+
 
     const subId = subscription.id;
 

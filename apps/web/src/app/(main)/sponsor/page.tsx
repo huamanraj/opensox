@@ -22,9 +22,7 @@ const SponsorPage = () => {
   const verifyPaymentMutation = trpc.sponsor.verifyPayment.useMutation({
     onSuccess: (data) => {
       // redirect to submission page with payment id after verification
-      router.push(
-        `/sponsor/submit?paymentId=${data.paymentId}`
-      );
+      router.push(`/sponsor/submit?paymentId=${data.paymentId}`);
     },
     onError: (error) => {
       console.error("payment verification failed:", error);
@@ -52,41 +50,42 @@ const SponsorPage = () => {
     },
   });
 
-  const createSubscriptionMutation = trpc.sponsor.createSubscription.useMutation({
-    onSuccess: async (data: any) => {
-      const options = {
-        key: data.key,
-        name: "OpenSox",
-        description: "Monthly Sponsorship - $500",
-        subscription_id: data.subscriptionId,
-        theme: {
-          color: "#4dd0a4",
-        },
-        options: {
-          checkout: {
-            method: {
-              netbanking: 1, // enable netbanking
-              card: 1, // enable card payments
-              upi: 1, // enable upi payments
-              wallet: 1, // enable wallet payments
+  const createSubscriptionMutation =
+    trpc.sponsor.createSubscription.useMutation({
+      onSuccess: async (data: any) => {
+        const options = {
+          key: data.key,
+          name: "OpenSox",
+          description: "Monthly Sponsorship - $500",
+          subscription_id: data.subscriptionId,
+          theme: {
+            color: "#4dd0a4",
+          },
+          options: {
+            checkout: {
+              method: {
+                netbanking: 1, // enable netbanking
+                card: 1, // enable card payments
+                upi: 1, // enable upi payments
+                wallet: 1, // enable wallet payments
+              },
             },
           },
-        },
-      };
+        };
 
-      await initiatePayment(options);
-    },
-    onError: (error: any) => {
-      console.error("subscription creation failed:", error);
-      alert("failed to initiate payment. please try again.");
-      setLoading(false);
-    },
-  });
+        await initiatePayment(options);
+      },
+      onError: (error: any) => {
+        console.error("subscription creation failed:", error);
+        alert("failed to initiate payment. please try again.");
+        setLoading(false);
+      },
+    });
 
   const handleBecomeSponsor = () => {
     setLoading(true);
     // create payment order for $500 monthly sponsorship
-    createSubscriptionMutation.mutate();
+    createSubscriptionMutation.mutate({ planId: "plan_RpFPgf6GGzMlPG" });
   };
 
   return (
@@ -254,7 +253,8 @@ const SponsorPage = () => {
                   When will my sponsorship go live?
                 </AccordionTrigger>
                 <AccordionContent className="text-neutral-400 text-base pb-6">
-                  Your sponsorship will be live immediately after payment automatically.
+                  Your sponsorship will be live immediately after payment
+                  automatically.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem
@@ -351,7 +351,8 @@ const SponsorPage = () => {
                   </div>
 
                   <p className="text-neutral-500 text-xs md:text-sm mt-6">
-                    Your sponsorship will be live immediately after payment automatically.
+                    Your sponsorship will be live immediately after payment
+                    automatically.
                   </p>
                 </div>
               </div>
