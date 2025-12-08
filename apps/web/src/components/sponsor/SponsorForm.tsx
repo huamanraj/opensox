@@ -26,9 +26,12 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const submitAssetsMutation = trpc.sponsor.submitAssets.useMutation({
     onSuccess: () => {
+      // Set redirecting state to keep spinner visible
+      setIsRedirecting(true);
       // redirect to landing page after successful submission
       router.push("/");
       router.refresh();
@@ -104,7 +107,7 @@ export const SponsorForm: React.FC<SponsorFormProps> = ({
     form.formState.isValid &&
     imageUrl &&
     !uploading;
-  const isSubmitting = submitAssetsMutation.isPending;
+  const isSubmitting = submitAssetsMutation.isPending || isRedirecting;
 
   return (
     <div className="max-w-4xl mx-auto">

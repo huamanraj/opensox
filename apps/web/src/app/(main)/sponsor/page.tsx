@@ -15,7 +15,7 @@ import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../../api/src/routers/_app";
+import type { AppRouter } from "@api/routers/_app";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 

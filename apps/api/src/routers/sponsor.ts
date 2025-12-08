@@ -129,11 +129,20 @@ export const sponsorRouter = router({
                     },
                 });
 
+                const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
+                if (!razorpayKeyId) {
+                    console.error("❌ RAZORPAY_KEY_ID not configured in environment");
+                    throw new TRPCError({
+                        code: "INTERNAL_SERVER_ERROR",
+                        message: "payment gateway not properly configured",
+                    });
+                }
+
                 return {
                     subscriptionId: subscription.id,
                     planId: subscription.plan_id,
                     status: subscription.status,
-                    key: process.env.RAZORPAY_KEY_ID,
+                    key: razorpayKeyId,
                 };
             } catch (error) {
                 console.error("failed to create sponsor subscription:", error);
@@ -433,6 +442,7 @@ export const sponsorRouter = router({
             select: {
                 id: true,
                 company_name: true,
+                description: true,
                 image_url: true,
                 website: true,
                 plan_status: true,
