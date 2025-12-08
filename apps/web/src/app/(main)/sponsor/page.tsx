@@ -38,7 +38,7 @@ const SponsorPage = () => {
       // verify payment on backend
       verifyPaymentMutation.mutate({
         razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_order_id: response.razorpay_order_id,
+        razorpay_subscription_id: response.razorpay_subscription_id,
         razorpay_signature: response.razorpay_signature,
       });
     },
@@ -56,11 +56,9 @@ const SponsorPage = () => {
     onSuccess: async (data: any) => {
       const options = {
         key: data.key,
-        amount: data.amount,
-        currency: data.currency,
         name: "OpenSox",
         description: "Monthly Sponsorship - $500",
-        order_id: data.orderId,
+        subscription_id: data.subscriptionId,
         theme: {
           color: "#4dd0a4",
         },

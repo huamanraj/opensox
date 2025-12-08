@@ -4,6 +4,7 @@ import prismaModule from "../prisma.js";
 import { paymentService } from "../services/payment.service.js";
 import { TRPCError } from "@trpc/server";
 import { rz_instance } from "../clients/razorpay.js";
+import crypto from "crypto";
 
 const { prisma } = prismaModule;
 
@@ -15,9 +16,38 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET || "",
 });
 
-// fixed monthly subscription amount: $500 = 50000 cents (USD)
-const SPONSOR_MONTHLY_AMOUNT = 50000; // $500 in cents
+// fixed monthly sponsorship amount
+const SPONSOR_MONTHLY_AMOUNT = 50000;
 const SPONSOR_CURRENCY = "USD";
+const SPONSOR_PLAN_ID = process.env.RAZORPAY_SPONSOR_PLAN_ID || "";
+
+const verifySubscriptionSignature = (
+    subscriptionId: string,
+    paymentId: string,
+    signature: string
+): boolean => {
+    try {
+        const keySecret = process.env.RAZORPAY_KEY_SECRET;
+        if (!keySecret) {
+            throw new Error("RAZORPAY_KEY_SECRET not configured");
+        }
+
+        const generatedSignatureHex = crypto
+            .createHmac("sha256", keySecret)
+            .update(`${subscriptionId}|${paymentId}`)
+            .digest("hex");
+
+        const a = Buffer.from(signature, "hex");
+        const b = Buffer.from(generatedSignatureHex, "hex");
+
+        if (a.length !== b.length) return false;
+
+        return crypto.timingSafeEqual(a, b);
+    } catch (error) {
+        console.error("subscription signature verification error:", error);
+        return false;
+    }
+};
 
 export const sponsorRouter = router({
     // upload image to cloudinary (public, no auth required)
@@ -56,33 +86,39 @@ export const sponsorRouter = router({
             }
         }),
 
-    // create payment order for sponsorship (public, no auth required)
+    // create razorpay subscription for sponsorship (public, no auth required)
     createSubscription: publicProcedure
         .mutation(async () => {
-            // generate receipt id
-            const timestamp = Date.now();
-            const randomId = Math.random().toString(36).substring(2, 10);
-            const receipt = `sp_${timestamp}_${randomId}`;
-
-            const order = await paymentService.createOrder({
-                amount: SPONSOR_MONTHLY_AMOUNT,
-                currency: SPONSOR_CURRENCY,
-                receipt,
-                notes: {
-                    type: "sponsor",
-                },
-            });
-
-            if ("error" in order) {
-                throw new Error(order.error.description);
+            if (!SPONSOR_PLAN_ID) {
+                throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "sponsor subscription plan not configured",
+                });
             }
 
-            return {
-                orderId: order.id,
-                amount: order.amount,
-                currency: order.currency,
-                key: process.env.RAZORPAY_KEY_ID,
-            };
+            try {
+                const subscription = await rz_instance.subscriptions.create({
+                    plan_id: SPONSOR_PLAN_ID,
+                    total_count: 999,
+                    customer_notify: 1,
+                    notes: {
+                        type: "sponsor",
+                    },
+                });
+
+                return {
+                    subscriptionId: subscription.id,
+                    planId: subscription.plan_id,
+                    status: subscription.status,
+                    key: process.env.RAZORPAY_KEY_ID,
+                };
+            } catch (error) {
+                console.error("failed to create sponsor subscription:", error);
+                throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "failed to create sponsor subscription",
+                });
+            }
         }),
 
     // verify payment and create sponsor record (public, no auth required)
@@ -90,52 +126,88 @@ export const sponsorRouter = router({
         .input(
             z.object({
                 razorpay_payment_id: z.string(),
-                razorpay_order_id: z.string(),
+                razorpay_order_id: z.string().optional(),
+                razorpay_subscription_id: z.string().optional(),
                 razorpay_signature: z.string(),
             })
         )
         .mutation(async ({ input }) => {
             try {
-                // verify signature
-                const isValidSignature = paymentService.verifyPaymentSignature(
-                    input.razorpay_order_id,
-                    input.razorpay_payment_id,
-                    input.razorpay_signature
-                );
+                let subscriptionId: string | null = input.razorpay_subscription_id ?? null;
 
-                if (!isValidSignature) {
+                if (input.razorpay_order_id) {
+                    const isValidSignature = paymentService.verifyPaymentSignature(
+                        input.razorpay_order_id,
+                        input.razorpay_payment_id,
+                        input.razorpay_signature
+                    );
+
+                    if (!isValidSignature) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "invalid payment signature",
+                        });
+                    }
+
+                    const order = await rz_instance.orders.fetch(input.razorpay_order_id);
+                    if (
+                        !order ||
+                        order.amount !== SPONSOR_MONTHLY_AMOUNT ||
+                        order.currency !== SPONSOR_CURRENCY ||
+                        order.notes?.type !== "sponsor"
+                    ) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "invalid order details",
+                        });
+                    }
+                } else if (subscriptionId) {
+                    const isValidSignature = verifySubscriptionSignature(
+                        subscriptionId,
+                        input.razorpay_payment_id,
+                        input.razorpay_signature
+                    );
+
+                    if (!isValidSignature) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "invalid subscription payment signature",
+                        });
+                    }
+
+                    if (!SPONSOR_PLAN_ID) {
+                        throw new TRPCError({
+                            code: "INTERNAL_SERVER_ERROR",
+                            message: "sponsor subscription plan not configured",
+                        });
+                    }
+
+                    const subscription = await rz_instance.subscriptions.fetch(subscriptionId);
+                    if (!subscription || subscription.plan_id !== SPONSOR_PLAN_ID) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "invalid subscription details",
+                        });
+                    }
+                } else {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
-                        message: "invalid payment signature",
+                        message: "missing order or subscription information",
                     });
                 }
 
-                // CRITICAL: validate order attributes to prevent replay/misuse
-                const order = await rz_instance.orders.fetch(input.razorpay_order_id);
-                if (
-                    !order ||
-                    order.amount !== SPONSOR_MONTHLY_AMOUNT ||
-                    order.currency !== SPONSOR_CURRENCY ||
-                    order.notes?.type !== "sponsor"
-                ) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: "invalid order details",
-                    });
-                }
-
-                // Upsert payment to avoid race conditions / duplicates
+                // upsert payment to avoid race conditions / duplicates
                 await prisma.payment.upsert({
                     where: { razorpayPaymentId: input.razorpay_payment_id },
                     update: {
-                        razorpayOrderId: input.razorpay_order_id,
+                        razorpayOrderId: input.razorpay_order_id ?? "",
                         amount: SPONSOR_MONTHLY_AMOUNT,
                         currency: SPONSOR_CURRENCY,
                         status: "captured",
                     },
                     create: {
                         razorpayPaymentId: input.razorpay_payment_id,
-                        razorpayOrderId: input.razorpay_order_id,
+                        razorpayOrderId: input.razorpay_order_id ?? "",
                         amount: SPONSOR_MONTHLY_AMOUNT,
                         currency: SPONSOR_CURRENCY,
                         status: "captured",
@@ -176,6 +248,7 @@ export const sponsorRouter = router({
                     await prisma.sponsor.create({
                         data: {
                             razorpay_payment_id: input.razorpay_payment_id,
+                            razorpay_sub_id: subscriptionId,
                             plan_status: "pending_submission",
                             company_name: "",
                             description: "",
@@ -194,6 +267,7 @@ export const sponsorRouter = router({
                             contact_name: contactName || existingSponsor.contact_name,
                             contact_email: contactEmail || existingSponsor.contact_email,
                             contact_phone: contactPhone || existingSponsor.contact_phone,
+                            razorpay_sub_id: subscriptionId || existingSponsor.razorpay_sub_id,
                         },
                     });
                 }
@@ -238,28 +312,53 @@ export const sponsorRouter = router({
                     });
                 }
 
-                // Fetch payment details from Razorpay to get the linked order_id
+                // fetch payment details from razorpay to get the linked order or subscription
                 const rpPayment = await rz_instance.payments.fetch(input.razorpayPaymentId);
-                const linkedOrderId = (rpPayment as any)?.order_id;
-                if (!linkedOrderId) {
+                const linkedOrderId = (rpPayment as any)?.order_id as string | undefined;
+                const linkedSubscriptionId = (rpPayment as any)?.subscription_id as
+                    | string
+                    | undefined;
+
+                if (!linkedOrderId && !linkedSubscriptionId) {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
-                        message: "payment not linked to a valid order",
+                        message: "payment not linked to a valid order or subscription",
                     });
                 }
 
-                // Fetch and validate the order invariants for sponsor plan
-                const order = await rz_instance.orders.fetch(linkedOrderId);
-                if (
-                    !order ||
-                    order.amount !== SPONSOR_MONTHLY_AMOUNT ||
-                    order.currency !== SPONSOR_CURRENCY ||
-                    order.notes?.type !== "sponsor"
-                ) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: "invalid order details for sponsor plan",
-                    });
+                if (linkedOrderId) {
+                    const order = await rz_instance.orders.fetch(linkedOrderId);
+                    if (
+                        !order ||
+                        order.amount !== SPONSOR_MONTHLY_AMOUNT ||
+                        order.currency !== SPONSOR_CURRENCY ||
+                        order.notes?.type !== "sponsor"
+                    ) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "invalid order details for sponsor plan",
+                        });
+                    }
+                } else if (linkedSubscriptionId) {
+                    if (!SPONSOR_PLAN_ID) {
+                        throw new TRPCError({
+                            code: "INTERNAL_SERVER_ERROR",
+                            message: "sponsor subscription plan not configured",
+                        });
+                    }
+
+                    const subscription = await rz_instance.subscriptions.fetch(
+                        linkedSubscriptionId
+                    );
+                    if (
+                        !subscription ||
+                        subscription.plan_id !== SPONSOR_PLAN_ID
+                    ) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "invalid subscription details for sponsor plan",
+                        });
+                    }
                 }
 
                 // Enforce flow: Sponsor must exist with pending_submission from verifyPayment
