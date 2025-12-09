@@ -66,6 +66,12 @@ const Footer = () => {
                   Pricing
                 </Link>
                 <Link
+                  href="/pitch"
+                  className="text-[#b1b1b1] hover:text-white transition-colors text-xs"
+                >
+                  My pitch to you
+                </Link>
+                <Link
                   href="/blogs"
                   className="text-[#b1b1b1] hover:text-white transition-colors text-xs"
                 >
