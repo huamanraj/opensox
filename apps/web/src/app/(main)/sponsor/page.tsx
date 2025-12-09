@@ -108,7 +108,7 @@ const SponsorPage = () => {
 
   return (
     <>
-      <main className="min-h-screen bg-black text-white pt-32 pb-20 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden isolate">
+      <main className="min-h-screen bg-black text-white pt-24 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden isolate">
         <div className="absolute top-0 left-0 w-full h-[50dvh] lg:h-[69dvh] -z-10 overflow-hidden">
           <Image
             src="/assets/bgmain.svg"
@@ -133,7 +133,7 @@ const SponsorPage = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-2 gap-12 md:gap-24 mb-32 text-center">
+          <div className="w-full grid grid-cols-2 gap-8 md:gap-24 mb-20 md:mb-32 text-center">
             <div className="space-y-2">
               <div className="text-4xl md:text-6xl font-bold text-white tracking-tight">
                 10K+
@@ -153,7 +153,7 @@ const SponsorPage = () => {
           </div>
 
           {/* Sponsor Slots Section */}
-          <div className="w-full max-w-6xl mx-auto mb-40 bg-[#0A0A0A] rounded-[32px] p-8 md:p-12 border border-neutral-900">
+          <div className="w-full max-w-6xl mx-auto mb-24 md:mb-40 bg-[#0A0A0A] rounded-[24px] md:rounded-[32px] p-6 md:p-12 border border-neutral-900">
             <p className="text-neutral-400 mb-8 text-lg font-medium">
               Sponsors will be listed below the hero section on homepage.
             </p>
@@ -173,7 +173,7 @@ const SponsorPage = () => {
           </div>
 
           {/* Why Sponsor Section */}
-          <div className="w-full max-w-6xl mx-auto mb-32">
+          <div className="w-full max-w-6xl mx-auto mb-24 md:mb-32">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
               Why sponsor OpenSox?
             </h2>
@@ -232,19 +232,19 @@ const SponsorPage = () => {
           </div>
 
           {/* FAQ Section */}
-          <div className="w-full max-w-3xl mx-auto mb-32">
+          <div className="w-full max-w-3xl mx-auto mb-24 md:mb-32">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-white">
               Frequently Asked Questions
             </h2>
             <Accordion type="single" collapsible className="w-full space-y-4">
               <AccordionItem
                 value="item-1"
-                className="border border-neutral-800 rounded-xl px-6 bg-neutral-900/30"
+                className="border border-neutral-800 rounded-xl px-4 md:px-6 bg-neutral-900/30"
               >
-                <AccordionTrigger className="text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-6">
+                <AccordionTrigger className="text-base md:text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-4 md:py-6">
                   How long does the sponsorship last?
                 </AccordionTrigger>
-                <AccordionContent className="text-neutral-400 text-base pb-6">
+                <AccordionContent className="text-neutral-400 text-sm md:text-base pb-4 md:pb-6">
                   Sponsorships are billed monthly. You can cancel your
                   subscription at any time, and your logo will remain on the
                   site until the end of your billing period.
@@ -252,12 +252,12 @@ const SponsorPage = () => {
               </AccordionItem>
               <AccordionItem
                 value="item-2"
-                className="border border-neutral-800 rounded-xl px-6 bg-neutral-900/30"
+                className="border border-neutral-800 rounded-xl px-4 md:px-6 bg-neutral-900/30"
               >
-                <AccordionTrigger className="text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-6">
+                <AccordionTrigger className="text-base md:text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-4 md:py-6">
                   What logo formats do you accept?
                 </AccordionTrigger>
-                <AccordionContent className="text-neutral-400 text-base pb-6">
+                <AccordionContent className="text-neutral-400 text-sm md:text-base pb-4 md:pb-6">
                   We accept SVG, PNG, and JPG formats. SVG is preferred for the
                   best quality on all screen sizes. If providing a PNG or JPG,
                   please ensure it is high resolution (at least 500px wide).
@@ -265,24 +265,24 @@ const SponsorPage = () => {
               </AccordionItem>
               <AccordionItem
                 value="item-3"
-                className="border border-neutral-800 rounded-xl px-6 bg-neutral-900/30"
+                className="border border-neutral-800 rounded-xl px-4 md:px-6 bg-neutral-900/30"
               >
-                <AccordionTrigger className="text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-6">
+                <AccordionTrigger className="text-base md:text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-4 md:py-6">
                   When will my sponsorship go live?
                 </AccordionTrigger>
-                <AccordionContent className="text-neutral-400 text-base pb-6">
+                <AccordionContent className="text-neutral-400 text-sm md:text-base pb-4 md:pb-6">
                   Your sponsorship will be live immediately after payment
                   automatically.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem
                 value="item-4"
-                className="border border-neutral-800 rounded-xl px-6 bg-neutral-900/30"
+                className="border border-neutral-800 rounded-xl px-4 md:px-6 bg-neutral-900/30"
               >
-                <AccordionTrigger className="text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-6">
+                <AccordionTrigger className="text-base md:text-lg font-medium hover:no-underline hover:text-green-400 transition-colors py-4 md:py-6">
                   Can I update my link or logo?
                 </AccordionTrigger>
-                <AccordionContent className="text-neutral-400 text-base pb-6">
+                <AccordionContent className="text-neutral-400 text-sm md:text-base pb-4 md:pb-6">
                   Yes, absolutely. If you rebrand or want to change the
                   destination URL, just reach out to our support team, and we
                   will update it for you.
@@ -291,7 +291,7 @@ const SponsorPage = () => {
             </Accordion>
           </div>
           {/* CTA Section */}
-          <div className="w-full max-w-5xl mx-auto py-20 px-4 md:px-0">
+          <div className="w-full max-w-5xl mx-auto py-12 md:py-20 px-0 md:px-0">
             <div className="relative">
               {/* Dotted Lines Effect */}
               <div className="absolute inset-0 pointer-events-none z-20">
@@ -327,7 +327,7 @@ const SponsorPage = () => {
                 />
               </div>
 
-              <div className="relative bg-[#0A0A0A] p-8 md:p-16 text-center overflow-hidden">
+              <div className="relative bg-[#0A0A0A] p-6 md:p-16 text-center overflow-hidden">
                 {/* Background Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/20 to-transparent pointer-events-none" />
 
