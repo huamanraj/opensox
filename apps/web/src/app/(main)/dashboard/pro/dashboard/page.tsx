@@ -110,13 +110,21 @@ export default function ProDashboardPage() {
         </h1>
         {isPaidUser && (
           <div className="mt-6">
-            <button
-              onClick={handleJoinSlack}
-              disabled={isJoining}
-              className="px-4 py-2 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              {isJoining ? "Joining..." : "Join Slack"}
-            </button>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <button
+                onClick={handleJoinSlack}
+                disabled={isJoining}
+                className="px-4 py-2 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {isJoining ? "Joining..." : "Join Slack"}
+              </button>
+              <button
+                onClick={() => router.push("/testimonials/submit")}
+                className="px-4 py-2 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-medium rounded-lg transition-colors duration-200 text-sm"
+              >
+                Submit Testimonial
+              </button>
+            </div>
             {error && <p className="text-error-text text-sm mt-2">{error}</p>}
           </div>
         )}
