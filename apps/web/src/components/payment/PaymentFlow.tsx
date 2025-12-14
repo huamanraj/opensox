@@ -14,6 +14,7 @@ interface PaymentFlowProps {
   description?: string;
   buttonText?: string;
   buttonClassName?: string;
+  callbackUrl?: string;
 }
 
 /**
@@ -41,6 +42,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({
   description = "Payment",
   buttonText = "Invest",
   buttonClassName,
+  callbackUrl,
 }) => {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();

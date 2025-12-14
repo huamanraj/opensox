@@ -19,6 +19,7 @@ import {
   Squares2X2Icon,
   ChevronDownIcon,
   LockClosedIcon,
+  AcademicCapIcon
 } from "@heroicons/react/24/outline";
 import { useShowSidebar } from "@/store/useShowSidebar";
 import { signOut, useSession } from "next-auth/react";
@@ -50,6 +51,11 @@ const FREE_ROUTES: RouteConfig[] = [
     path: "/dashboard/sheet",
     label: "OSS Sheet",
     icon: <DocumentTextIcon className="size-5" />,
+  },
+  {
+    path: "/dashboard/oss-programs",
+    label: "OSS Programs",
+    icon: <AcademicCapIcon className="size-5" />,
   },
 ];
 
@@ -421,6 +427,7 @@ function ProfileMenu({ isCollapsed }: { isCollapsed: boolean }) {
   const { data: session } = useSession();
   const router = useRouter();
 
+  const isLoggedIn = !!session;
   const fullName = session?.user?.name || "User";
   const firstName = fullName.split(" ")[0];
   const userEmail = session?.user?.email || "";
@@ -491,25 +498,31 @@ function ProfileMenu({ isCollapsed }: { isCollapsed: boolean }) {
 
             {/* Menu Items */}
             <div className="py-1">
+              {isLoggedIn && (
+                <button
+                  onClick={() => {
+                    router.push("/dashboard/account");
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-secondary hover:bg-dash-hover transition-colors"
+                >
+                  <Cog6ToothIcon className="size-4" />
+                  <span>Account Settings</span>
+                </button>
+              )}
               <button
                 onClick={() => {
-                  router.push("/dashboard/account");
-                  setOpen(false);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-secondary hover:bg-dash-hover transition-colors"
-              >
-                <Cog6ToothIcon className="size-4" />
-                <span>Account Settings</span>
-              </button>
-              <button
-                onClick={() => {
-                  signOut({ callbackUrl: "/" });
+                  if (isLoggedIn) {
+                    signOut({ callbackUrl: "/" });
+                  } else {
+                    router.push("/login");
+                  }
                   setOpen(false);
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-secondary hover:bg-dash-surface transition-colors"
               >
                 <ArrowRightOnRectangleIcon className="size-4" />
-                <span>Logout</span>
+                <span>{isLoggedIn ? "Logout" : "Login"}</span>
               </button>
             </div>
           </motion.div>
