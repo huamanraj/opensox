@@ -11,7 +11,7 @@ const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
 
-const isAuthed = t.middleware(async ({ ctx, next }) => {
+const isAuthed = t.middleware<{ ctx: ProtectedContext }>(async ({ ctx, next }) => {
   const authHeader = ctx.req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -29,7 +29,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       ctx: {
         ...ctx,
         user,
-      },
+      } as ProtectedContext,
     });
   } catch (error) {
     throw new TRPCError({
@@ -41,6 +41,4 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
-// Using 'as any' to avoid TypeScript portability errors
-// Type safety is maintained through AppRouter type inference
-export const protectedProcedure = t.procedure.use(isAuthed) as any;
+export const protectedProcedure = t.procedure.use(isAuthed);

@@ -102,6 +102,7 @@ export async function validateAvatarUrl(avatarUrl: string): Promise<void> {
         const response = await fetch(avatarUrl, {
             method: "HEAD",
             signal: controller.signal,
+            redirect: "error",
             headers: {
                 "User-Agent": "OpenSox-Avatar-Validator/1.0",
             },
