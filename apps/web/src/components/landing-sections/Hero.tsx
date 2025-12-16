@@ -5,8 +5,11 @@ import React from "react";
 import PrimaryButtom from "../ui/custom-button";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const Hero = () => {
+  const { trackButtonClick } = useAnalytics();
+
   // Container variants for staggered children animation
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -30,6 +33,10 @@ const Hero = () => {
         ease: "easeOut",
       },
     },
+  };
+
+  const handleGetStartedClick = () => {
+    trackButtonClick("Get Started", "hero");
   };
 
   return (
@@ -97,7 +104,11 @@ const Hero = () => {
         }}
         className="cursor-pointer z-30 [will-change:transform,opacity] motion-reduce:transition-none motion-reduce:transform-none"
       >
-        <Link href="/dashboard/home" className="block">
+        <Link
+          href="/dashboard/home"
+          className="block"
+          onClick={handleGetStartedClick}
+        >
           <PrimaryButtom>
             <Terminal />
             Get Started
