@@ -34,14 +34,18 @@ const SignInPage = () => {
   const safeCallbackUrl = getSafeCallbackUrl(callbackUrl);
 
   const handleSignIn = (provider: "google" | "github") => {
-    // Track sign-in attempt
-    trackSignInStarted(provider, safeCallbackUrl);
+    // Sanitize callback URL to prevent leaking sensitive query params or tokens
+    const sanitizedCallback = safeCallbackUrl.split("?")[0].split("#")[0];
 
-    // Store provider and sign-in initiation for post-callback tracking
+    // Track sign-in attempt with sanitized callback (no query params or fragments)
+    trackSignInStarted(provider, sanitizedCallback);
+
+    // Store only provider and boolean flag for post-callback tracking
+    // Do NOT store the full callback URL to avoid leaking tokens/PII
     sessionStorage.setItem("posthog_sign_in_initiated", "true");
     sessionStorage.setItem("posthog_sign_in_provider", provider);
 
-    // Proceed with sign-in
+    // Proceed with sign-in (use the full safe callback for actual redirect)
     signIn(provider, { callbackUrl: safeCallbackUrl });
   };
 

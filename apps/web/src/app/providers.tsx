@@ -25,8 +25,8 @@ export function PostHogAuthTracker() {
     if (status === "loading") return;
 
     try {
-      // Check if PostHog is initialized
-      if (!posthog.__loaded) return;
+      // Check if PostHog is initialized using documented pattern
+      if (!posthog || typeof posthog.capture !== "function") return;
 
       // Detect transition from unauthenticated to authenticated
       const wasSignInInitiated =
@@ -46,19 +46,37 @@ export function PostHogAuthTracker() {
         if (isNewSignIn && !hasTrackedSignIn.current) {
           hasTrackedSignIn.current = true;
 
-          // Determine provider from stored value
-          const provider = storedProvider || "google"; // Default to google if unknown
+          // Validate provider to avoid skewing analytics
+          const validProviders = ["google", "github"];
+          const provider =
+            storedProvider && validProviders.includes(storedProvider)
+              ? storedProvider
+              : "unknown";
+
+          // Determine if this is a new user based on account creation time
+          // Consider a user "new" if their account was created within the last 5 minutes
+          let isNewUser = false;
+          if (session.user?.createdAt) {
+            try {
+              const createdAtTime = new Date(session.user.createdAt).getTime();
+              const now = Date.now();
+              const fiveMinutesInMs = 5 * 60 * 1000;
+              isNewUser = now - createdAtTime < fiveMinutesInMs;
+            } catch (error) {
+              console.error("[Analytics] Error parsing createdAt:", error);
+            }
+          }
 
           // Track sign-in completed EVENT only (no person properties)
           posthog.capture("sign_in_completed", {
             provider: provider,
-            is_new_user: false,
+            is_new_user: isNewUser,
           });
 
           if (process.env.NODE_ENV === "development") {
             console.log("[Analytics] Event tracked: sign_in_completed", {
               provider,
-              is_new_user: false,
+              is_new_user: isNewUser,
             });
           }
 
@@ -88,7 +106,7 @@ export function PostHogAuthTracker() {
 }
 
 /**
- * PostHog Provider 
+ * PostHog Provider
  * NOTE: This provider does NOT handle auth tracking.
  * Use PostHogAuthTracker inside SessionProvider for that.
  */

@@ -136,11 +136,54 @@ export function truncateId(id: string): string {
 }
 
 /**
+ * Sanitizes a callback URL by removing query parameters and fragments.
+ * This prevents leaking sensitive tokens, secrets, or PII in analytics.
+ * 
+ * @param url - The URL to sanitize
+ * @returns The pathname only (e.g., "/dashboard/home")
+ * 
+ * @example
+ * ```ts
+ * sanitizeCallbackUrl("/dashboard?token=abc123#section")
+ * // Returns: "/dashboard"
+ * ```
+ */
+export function sanitizeCallbackUrl(url: string): string {
+    if (!url || url.trim() === "") {
+        return "/dashboard/home";
+    }
+
+    try {
+        // If it's a relative URL (starts with /)
+        if (url.startsWith("/") && !url.startsWith("//")) {
+            // Remove query params and fragments
+            const pathOnly = url.split("?")[0].split("#")[0];
+            return pathOnly || "/dashboard/home";
+        }
+
+        // If it's an absolute URL, parse it
+        const parsedUrl = new URL(url, typeof window !== "undefined" ? window.location.origin : "https://example.com");
+        return parsedUrl.pathname || "/dashboard/home";
+    } catch {
+        // If parsing fails, return default
+        return "/dashboard/home";
+    }
+}
+
+/**
  * Checks if PostHog is initialized and ready.
+ * 
+ * Uses the public API pattern recommended by PostHog: checking if the capture
+ * method exists. This is safer than using the undocumented __loaded property.
+ * 
+ * Note: PostHog does not provide a dedicated isReady() or loaded() method.
+ * The recommended approach is to check for the existence of core methods.
+ * 
+ * @returns {boolean} True if PostHog is initialized and ready to use
  */
 export function isPostHogReady(): boolean {
     try {
-        return typeof posthog !== "undefined" && posthog.__loaded === true;
+        return typeof posthog !== "undefined" && typeof posthog.capture === "function";
     } catch {
         return false;
     }
@@ -343,6 +386,7 @@ export const analytics = {
     // Utility functions
     sanitizeAmount,
     truncateId,
+    sanitizeCallbackUrl,
 };
 
 export default analytics;

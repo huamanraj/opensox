@@ -71,7 +71,9 @@ export function useAnalytics(): UseAnalyticsReturn {
 
     const isReady = useMemo(() => {
         try {
-            return posthog?.__loaded === true;
+            // Use optional chaining to safely check if PostHog is initialized
+            // This is the documented pattern instead of using __loaded
+            return !!posthog && typeof posthog.capture === 'function';
         } catch {
             return false;
         }
