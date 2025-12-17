@@ -61,6 +61,22 @@ export const testimonialRouter = router({
             name: z.string().min(1, "Name is required").max(40, "Name must be at most 40 characters"),
             content: z.string().min(10, "Testimonial must be at least 10 characters").max(1000, "Testimonial must be at most 1000 characters"),
             avatar: z.string().url("Invalid avatar URL"),
+            socialLink: z.string().url("Invalid social link URL").refine((url) => {
+                const supportedPlatforms = [
+                    'twitter.com',
+                    'x.com',
+                    'linkedin.com',
+                    'instagram.com',
+                    'youtube.com',
+                    'youtu.be',
+                ];
+                try {
+                    const parsedUrl = new URL(url);
+                    return supportedPlatforms.some(platform => parsedUrl.hostname.includes(platform));
+                } catch {
+                    return false;
+                }
+            }, "Only Twitter/X, LinkedIn, Instagram, and YouTube links are supported").optional().or(z.literal('')),
         }))
         .mutation(async ({ ctx, input }: any) => {
             const userId = ctx.user.id;
@@ -73,22 +89,31 @@ export const testimonialRouter = router({
                 });
             }
 
+
+
+            // Check if testimonial already exists - prevent updates
+            const existingTestimonial = await ctx.db.prisma.testimonial.findUnique({
+                where: { userId },
+            });
+
+            if (existingTestimonial) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "You have already submitted a testimonial. Testimonials cannot be edited once submitted.",
+                });
+            }
+
             // Validate avatar URL with strict security checks
             await validateAvatarUrl(input.avatar);
 
-            const result = await ctx.db.prisma.testimonial.upsert({
-                where: { userId },
-                create: {
+            const result = await ctx.db.prisma.testimonial.create({
+                data: {
                     userId,
                     name: input.name,
                     content: input.content,
                     avatar: input.avatar,
+                    socialLink: input.socialLink || null,
                 },
-                update: {
-                    name: input.name,
-                    content: input.content,
-                    avatar: input.avatar,
-                }
             });
 
             // Invalidate cache after testimonial submission

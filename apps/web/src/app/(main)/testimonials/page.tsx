@@ -3,6 +3,7 @@ import React, { useMemo } from "react";
 import Navbar from "@/components/landing-sections/navbar";
 import Footer from "@/components/landing-sections/footer";
 import Image from "next/image";
+import { Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
 import { imageTestimonials } from "@/data/testimonials";
@@ -20,6 +21,7 @@ type TextTestimonial = TestimonialBase & {
     name: string;
     username?: string; // e.g. @username
     avatar: string;
+    socialLink?: string;
   };
 };
 
@@ -30,6 +32,28 @@ type ImageTestimonial = TestimonialBase & {
 };
 
 type Testimonial = TextTestimonial | ImageTestimonial;
+
+// Helper function to get social icon based on URL
+const getSocialIcon = (url: string) => {
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname.includes("twitter.com") || hostname.includes("x.com")) {
+      return <Twitter className="h-4 w-4" />;
+    }
+    if (hostname.includes("linkedin.com")) {
+      return <Linkedin className="h-4 w-4" />;
+    }
+    if (hostname.includes("instagram.com")) {
+      return <Instagram className="h-4 w-4" />;
+    }
+    if (hostname.includes("youtube.com") || hostname.includes("youtu.be")) {
+      return <Youtube className="h-4 w-4" />;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
 
 const TestimonialCard = ({ item }: { item: Testimonial }) => {
   if (item.type === "image") {
@@ -48,6 +72,10 @@ const TestimonialCard = ({ item }: { item: Testimonial }) => {
     );
   }
 
+  const socialIcon = item.user.socialLink
+    ? getSocialIcon(item.user.socialLink)
+    : null;
+
   return (
     <div className="mb-4 break-inside-avoid rounded-xl border border-[#252525] bg-neutral-900/50 p-6 hover:border-neutral-700 transition-colors flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -59,7 +87,7 @@ const TestimonialCard = ({ item }: { item: Testimonial }) => {
             className="object-cover"
           />
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col flex-1">
           <span className="text-sm font-medium text-white">
             {item.user.name}
           </span>
@@ -69,6 +97,17 @@ const TestimonialCard = ({ item }: { item: Testimonial }) => {
             </span>
           )}
         </div>
+        {socialIcon && item.user.socialLink && (
+          <a
+            href={item.user.socialLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neutral-400 hover:text-white transition-colors"
+            aria-label="Social profile"
+          >
+            {socialIcon}
+          </a>
+        )}
       </div>
       <p className="text-neutral-300 text-sm leading-relaxed">{item.content}</p>
     </div>
@@ -85,13 +124,20 @@ const TestimonialsPage = () => {
     const textTestimonials: TextTestimonial[] = (
       textTestimonialsData || []
     ).map(
-      (t: { id: string; content: string; name: string; avatar: string }) => ({
+      (t: {
+        id: string;
+        content: string;
+        name: string;
+        avatar: string;
+        socialLink?: string;
+      }) => ({
         id: t.id,
         type: "text" as const,
         content: t.content,
         user: {
           name: t.name,
           avatar: t.avatar,
+          socialLink: t.socialLink,
         },
       })
     );
