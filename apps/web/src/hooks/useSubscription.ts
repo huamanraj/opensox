@@ -25,6 +25,7 @@ export function useSubscription() {
     isLoading: isFetching,
     isError,
     isFetched,
+    refetch,
   } = (trpc.user as any).subscriptionStatus.useQuery(undefined, {
     enabled: !!session?.user && status === "authenticated",
     refetchOnWindowFocus: false,
@@ -73,5 +74,6 @@ export function useSubscription() {
     isPaidUser,
     subscription,
     isLoading,
+    refetch,
   };
 }

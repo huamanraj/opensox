@@ -4,6 +4,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { trpc } from "@/lib/trpc";
 
 export default function ProDashboardPage() {
   const { isPaidUser, isLoading } = useSubscription();
@@ -11,6 +12,19 @@ export default function ProDashboardPage() {
   const { data: session } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+
+  // Check if user has already submitted a testimonial
+  const { data: testimonialData } = (
+    trpc as any
+  ).testimonial.getMyTestimonial.useQuery(undefined, {
+    enabled: !!isPaidUser,
+    retry: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always fetch fresh data
+  });
+
+  const hasSubmittedTestimonial = !!testimonialData?.testimonial;
 
   useEffect(() => {
     if (!isLoading && !isPaidUser) {
@@ -118,12 +132,14 @@ export default function ProDashboardPage() {
               >
                 {isJoining ? "Joining..." : "Join Slack"}
               </button>
-              <button
-                onClick={() => router.push("/testimonials/submit")}
-                className="px-4 py-2 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-medium rounded-lg transition-colors duration-200 text-sm"
-              >
-                Submit Testimonial
-              </button>
+              {!hasSubmittedTestimonial && (
+                <button
+                  onClick={() => router.push("/testimonials/submit")}
+                  className="px-4 py-2 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-medium rounded-lg transition-colors duration-200 text-sm"
+                >
+                  Submit Testimonial
+                </button>
+              )}
             </div>
             {error && <p className="text-error-text text-sm mt-2">{error}</p>}
           </div>
