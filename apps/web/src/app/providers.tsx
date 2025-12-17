@@ -73,11 +73,23 @@ export function PostHogAuthTracker() {
             is_new_user: isNewUser,
           });
 
+          // Track sign-up completed for new users
+          if (isNewUser) {
+            posthog.capture("sign_up_completed", {
+              provider: provider,
+            });
+          }
+
           if (process.env.NODE_ENV === "development") {
             console.log("[Analytics] Event tracked: sign_in_completed", {
               provider,
               is_new_user: isNewUser,
             });
+            if (isNewUser) {
+              console.log("[Analytics] Event tracked: sign_up_completed", {
+                provider,
+              });
+            }
           }
 
           // Clear the sign-in tracking flags

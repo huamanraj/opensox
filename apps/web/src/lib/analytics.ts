@@ -1,6 +1,5 @@
 /**
  * Centralized Analytics Utility for PostHog
- * No PII (email, name) is stored - only anonymous user identifiers.
  */
 
 import posthog from "posthog-js";

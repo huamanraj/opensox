@@ -6,6 +6,7 @@ import { Google, Github } from "../icons/icons";
 import Image from "next/image";
 import Overlay from "../ui/overlay";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { sanitizeCallbackUrl } from "@/lib/analytics";
 
 const SignInPage = () => {
   const searchParams = useSearchParams();
@@ -35,7 +36,8 @@ const SignInPage = () => {
 
   const handleSignIn = (provider: "google" | "github") => {
     // Sanitize callback URL to prevent leaking sensitive query params or tokens
-    const sanitizedCallback = safeCallbackUrl.split("?")[0].split("#")[0];
+    // Use centralized utility for consistent sanitization
+    const sanitizedCallback = sanitizeCallbackUrl(safeCallbackUrl);
 
     // Track sign-in attempt with sanitized callback (no query params or fragments)
     trackSignInStarted(provider, sanitizedCallback);
