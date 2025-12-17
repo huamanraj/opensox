@@ -15,7 +15,7 @@ interface CreateOrderInput {
   notes?: Record<string, string>;
 }
 
-interface RazorpayOrderSuccess {
+export interface RazorpayOrderSuccess {
   amount: number;
   amount_due: number;
   amount_paid: number;
