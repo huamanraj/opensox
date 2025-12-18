@@ -77,7 +77,7 @@ const Hero = () => {
           variants={itemVariants}
           className="text-5xl text-[2.8rem] lg:text-7xl lg:text-[6rem] font-medium tracking-tighter [will-change:transform,opacity] motion-reduce:transition-none motion-reduce:transform-none"
         >
-          Find your perfect Open-Source Repo
+          Only platform you need to get into Open Source
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
@@ -90,8 +90,8 @@ const Hero = () => {
           }}
           className="w-full lg:text-2xl tracking-tight font-light sm:max-w-lg mx-auto lg:max-w-4xl lg:text-balance text-text-secondary"
         >
-          Find top open-source repos in seconds. Filter by your language,
-          framework, or niche. Start contributing in seconds, not hours.
+          Find suitabe OSS repos in seconds. learn the basics,
+          get the mentorship for OSS opportunities, GSoC, etc, and start making progress from today itself.
         </motion.p>
       </motion.div>
       <motion.div
