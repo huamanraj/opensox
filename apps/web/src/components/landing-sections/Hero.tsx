@@ -9,7 +9,6 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 
 const Hero = () => {
   const { trackButtonClick } = useAnalytics();
-
   // Container variants for staggered children animation
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -38,7 +37,6 @@ const Hero = () => {
   const handleGetStartedClick = () => {
     trackButtonClick("Get Started", "hero");
   };
-
   return (
     <div className="w-full min-h-[50dvh] lg:h-[69dvh] relative overflow-hidden z-10 p-4 lg:p-[60px] flex flex-col items-center justify-center gap-6 ">
       <Image
