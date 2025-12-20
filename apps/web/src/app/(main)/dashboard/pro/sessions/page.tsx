@@ -1,16 +1,13 @@
 "use client";
 
-import { useSubscription } from "@/hooks/useSubscription";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { proSessions, type ProSession } from "@/data/pro-sessions";
-import {
-  Play,
-  CheckCircle2,
-  ExternalLink,
-  ArrowLeft,
-} from "lucide-react";
+
+import { ArrowLeft, CheckCircle2, ExternalLink, Play } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { useSubscription } from "@/hooks/useSubscription";
+import { proSessions, type ProSession } from "@/data/pro-sessions";
 
 function SessionCard({
   session,
@@ -27,13 +24,23 @@ function SessionCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label={`Watch session: ${session.title}`}
       className="group relative bg-dash-surface border border-dash-border rounded-xl p-5 cursor-pointer 
                  transition-all duration-300 ease-out
                  hover:border-brand-purple/50 hover:bg-dash-hover hover:shadow-lg hover:shadow-brand-purple/5
-                 hover:-translate-y-1 active:scale-[0.98]"
+                 hover:-translate-y-1 active:scale-[0.98]
+                 focus-visible:ring-2 focus-visible:ring-brand-purple/50 focus-visible:outline-none"
       style={{
         animationDelay: `${index * 50}ms`,
       }}
@@ -155,14 +162,14 @@ export default function ProSessionsPage() {
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
-            
             <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
               Opensox Pro Sessions
             </h1>
           </div>
           <p className="text-text-secondary text-base md:text-lg max-w-2xl">
-            Recordings of Opensox Pro session meetings covering advanced open source strategies,
-            real-world examples, and insider tips to accelerate your journey.
+            Recordings of Opensox Pro session meetings covering advanced open
+            source strategies, real-world examples, and insider tips to
+            accelerate your journey.
           </p>
         </div>
 
