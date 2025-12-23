@@ -222,7 +222,7 @@ const Pricing = () => {
                               return (
                                 <li
                                   key={featureIndex}
-                                  className="font- text-sm flex items-center gap-4"
+                                  className="text-sm flex items-center gap-4"
                                 >
                                   <CornerDownRight className="size-4 flex-shrink-0 text-[#a472ea]" />
                                   {feature}

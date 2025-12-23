@@ -44,7 +44,7 @@ const opensoxFeatures = [
           href="https://www.youtube.com/playlist?list=PLiWTvT-J4wHhDh-Mngogynfusor-694G-"
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline text-[#a472ea]"
+          className="hover:underline text-brand-purple-light"
         >
           Check here.
         </Link>
@@ -88,10 +88,7 @@ export const PricingFeaturesSection = () => {
 
             if (isLCPElement) {
               return (
-                <li
-                  key={index}
-                  className="flex flex-col gap-4 w-full flex-1"
-                >
+                <li key={index} className="flex flex-col gap-4 w-full flex-1">
                   <div className="flex flex-col gap-2 w-full">
                     <div className="flex gap-4 items-center">
                       <div className="text-6xl font-mono font-semibold text-transparent bg-clip-text bg-gradient-to-b from-[#a472ea] to-[#341e7b]">
@@ -108,13 +105,11 @@ export const PricingFeaturesSection = () => {
                     </div>
                     {Array.isArray(feature.description) ? (
                       <div className="font-medium">
-                        {feature.description.map(
-                          (sentence, sentenceIndex) => (
-                            <p key={sentenceIndex} className="mb-2">
-                              {sentence}
-                            </p>
-                          )
-                        )}
+                        {feature.description.map((sentence, sentenceIndex) => (
+                          <p key={sentenceIndex} className="mb-2">
+                            {sentence}
+                          </p>
+                        ))}
                       </div>
                     ) : (
                       <p className="font-medium">{feature.description}</p>
@@ -126,7 +121,7 @@ export const PricingFeaturesSection = () => {
                         return (
                           <li
                             key={featureIndex}
-                            className="font- text-sm flex items-center gap-4"
+                            className="font-medium text-sm flex items-center gap-4"
                           >
                             <CornerDownRight className="size-4 flex-shrink-0 text-[#a472ea]" />
                             {feature}
@@ -157,9 +152,7 @@ export const PricingFeaturesSection = () => {
                       {index + 1}
                     </div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-2xl font-medium">
-                        {feature.title}
-                      </h3>
+                      <h3 className="text-2xl font-medium">{feature.title}</h3>
                       {feature.title === "OX Newsletter" && (
                         <ActiveTag text="completed" />
                       )}
@@ -167,13 +160,11 @@ export const PricingFeaturesSection = () => {
                   </div>
                   {Array.isArray(feature.description) ? (
                     <div className="font-medium">
-                      {feature.description.map(
-                        (sentence, sentenceIndex) => (
-                          <p key={sentenceIndex} className="mb-2">
-                            {sentence}
-                          </p>
-                        )
-                      )}
+                      {feature.description.map((sentence, sentenceIndex) => (
+                        <p key={sentenceIndex} className="mb-2">
+                          {sentence}
+                        </p>
+                      ))}
                     </div>
                   ) : (
                     <p className="font-medium">{feature.description}</p>
@@ -185,7 +176,7 @@ export const PricingFeaturesSection = () => {
                       return (
                         <li
                           key={featureIndex}
-                          className="font- text-sm flex items-center gap-4"
+                          className="font-medium text-sm flex items-center gap-4"
                         >
                           <CornerDownRight className="size-4 flex-shrink-0 text-[#a472ea]" />
                           {feature}
@@ -245,4 +236,3 @@ export const PricingWhySubscribeSection = () => {
     </>
   );
 };
-
