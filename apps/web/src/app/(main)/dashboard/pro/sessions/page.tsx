@@ -9,13 +9,13 @@ import { useRouter } from "next/navigation";
 import { useSubscription } from "@/hooks/useSubscription";
 import { proSessions, type ProSession } from "@/data/pro-sessions";
 
-function SessionCard({
+const SessionCard = ({
   session,
   index,
 }: {
   session: ProSession;
   index: number;
-}) {
+}): JSX.Element | null => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = () => {
@@ -114,14 +114,14 @@ function SessionCard({
                       transition-opacity duration-500 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(85, 25, 247, 0.05) 0%, transparent 70%)",
+            "radial-gradient(ellipse at center, rgb(85 25 247 / 0.05) 0%, transparent 70%)",
         }}
       />
     </div>
   );
-}
+};
 
-export default function ProSessionsPage() {
+const ProSessionsPage = (): JSX.Element | null => {
   const { isPaidUser, isLoading } = useSubscription();
   const router = useRouter();
 
@@ -189,4 +189,6 @@ export default function ProSessionsPage() {
       </div>
     </div>
   );
-}
+};
+
+export default ProSessionsPage;
