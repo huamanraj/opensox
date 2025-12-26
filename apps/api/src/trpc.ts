@@ -2,16 +2,16 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { Context } from "./context.js";
 import { verifyToken } from "./utils/auth.js";
-import type { User } from "@prisma/client";
+// import type { User } from "@prisma/client";
 
 // Type for context after authentication middleware
-type ProtectedContext = Context & { user: User };
+// type ProtectedContext = Context & { user: User };
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
 
-const isAuthed = t.middleware<{ ctx: ProtectedContext }>(async ({ ctx, next }) => {
+const isAuthed = t.middleware(async ({ ctx, next }) => {
   const authHeader = ctx.req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -29,7 +29,7 @@ const isAuthed = t.middleware<{ ctx: ProtectedContext }>(async ({ ctx, next }) =
       ctx: {
         ...ctx,
         user,
-      } as ProtectedContext,
+      },
     });
   } catch (error) {
     throw new TRPCError({
@@ -41,4 +41,4 @@ const isAuthed = t.middleware<{ ctx: ProtectedContext }>(async ({ ctx, next }) =
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(isAuthed);
+export const protectedProcedure:any = t.procedure.use(isAuthed);
