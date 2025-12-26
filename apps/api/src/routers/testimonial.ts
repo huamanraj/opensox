@@ -54,7 +54,10 @@ export const testimonialRouter = router({
                 ];
                 try {
                     const parsedUrl = new URL(url);
-                    return supportedPlatforms.some(platform => parsedUrl.hostname.includes(platform));
+                    return supportedPlatforms.some(platform => 
+                        parsedUrl.hostname === platform || 
+                        parsedUrl.hostname.endsWith('.' + platform)
+                    );
                 } catch {
                     return false;
                 }
