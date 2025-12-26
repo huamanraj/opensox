@@ -5,15 +5,34 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, ExternalLink, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import { useSubscription } from "@/hooks/useSubscription";
-import { proSessions, type ProSession } from "@/data/pro-sessions";
+import { trpc } from "@/lib/trpc";
+
+interface SessionTopic {
+  id: string;
+  timestamp: string;
+  topic: string;
+  order: number;
+}
+
+interface WeeklySession {
+  id: string;
+  title: string;
+  description: string | null;
+  youtubeUrl: string;
+  sessionDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  topics: SessionTopic[];
+}
 
 const SessionCard = ({
   session,
   index,
 }: {
-  session: ProSession;
+  session: WeeklySession;
   index: number;
 }): JSX.Element | null => {
   const [isHovered, setIsHovered] = useState(false);
@@ -53,7 +72,7 @@ const SessionCard = ({
                           group-hover:bg-brand-purple/20 transition-colors duration-300"
           >
             <span className="text-brand-purple font-bold text-sm">
-              {String(session.id).padStart(2, "0")}
+              {String(index + 1).padStart(2, "0")}
             </span>
           </div>
           <h3 className="text-text-primary font-semibold text-lg group-hover:text-brand-purple-light transition-colors duration-300">
@@ -77,27 +96,32 @@ const SessionCard = ({
       </div>
 
       {/* Topics covered */}
-      <div className="space-y-2.5 mb-4">
-        <p className="text-text-muted text-xs uppercase tracking-wider font-medium">
-          Topics Covered
-        </p>
-        <ul className="space-y-2">
-          {session.topicsCovered.map((topic, topicIndex) => (
-            <li
-              key={topicIndex}
-              className="flex items-start gap-2.5 text-text-secondary text-sm"
-            >
-              <CheckCircle2
-                className="w-4 h-4 text-brand-purple/70 mt-0.5 flex-shrink-0 
-                                       group-hover:text-brand-purple transition-colors duration-300"
-              />
-              <span className="group-hover:text-text-primary transition-colors duration-300">
-                {topic}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {session.topics && session.topics.length > 0 && (
+        <div className="space-y-2.5 mb-4">
+          <p className="text-text-muted text-xs uppercase tracking-wider font-medium">
+            Topics Covered
+          </p>
+          <ul className="space-y-2">
+            {session.topics.map((topic) => (
+              <li
+                key={topic.id}
+                className="flex items-start gap-2.5 text-text-secondary text-sm"
+              >
+                <CheckCircle2
+                  className="w-4 h-4 text-brand-purple/70 mt-0.5 flex-shrink-0 
+                                         group-hover:text-brand-purple transition-colors duration-300"
+                />
+                <span className="group-hover:text-text-primary transition-colors duration-300">
+                  {topic.timestamp && (
+                    <span className="text-text-muted mr-2">[{topic.timestamp}]</span>
+                  )}
+                  {topic.topic}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Watch now indicator */}
       <div
@@ -122,14 +146,30 @@ const SessionCard = ({
 };
 
 const ProSessionsPage = (): JSX.Element | null => {
-  const { isPaidUser, isLoading } = useSubscription();
+  const { isPaidUser, isLoading: subscriptionLoading } = useSubscription();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
+  // fetch sessions from api
+  const {
+    data: sessions,
+    isLoading: sessionsLoading,
+    isError: sessionsError,
+    error: sessionsErrorData,
+  } = (trpc.sessions as any).getAll.useQuery(undefined, {
+    enabled: !!session?.user && status === "authenticated" && isPaidUser,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // consider data fresh for 5 minutes
+  });
+
   useEffect(() => {
-    if (!isLoading && !isPaidUser) {
+    if (!subscriptionLoading && !isPaidUser) {
       router.push("/pricing");
     }
-  }, [isPaidUser, isLoading, router]);
+  }, [isPaidUser, subscriptionLoading, router]);
+
+  const isLoading = subscriptionLoading || sessionsLoading;
+  const hasError = sessionsError;
 
   if (isLoading) {
     return (
@@ -144,6 +184,35 @@ const ProSessionsPage = (): JSX.Element | null => {
 
   if (!isPaidUser) {
     return null;
+  }
+
+  if (hasError) {
+    return (
+      <div className="w-full min-h-full bg-ox-content">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="mb-8 md:mb-12">
+            <Link
+              href="/dashboard/pro/dashboard"
+              className="inline-flex items-center gap-2 text-text-muted hover:text-brand-purple-light 
+                         transition-colors duration-200 mb-6 group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
+              <span className="text-sm">Back to Pro Dashboard</span>
+            </Link>
+          </div>
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+            <p className="text-text-secondary text-lg">
+              Failed to load sessions. Please try again later.
+            </p>
+            {sessionsErrorData && (
+              <p className="text-text-muted text-sm">
+                {(sessionsErrorData as any)?.message || "Unknown error"}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -174,11 +243,22 @@ const ProSessionsPage = (): JSX.Element | null => {
         </div>
 
         {/* Sessions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {proSessions.map((session, index) => (
-            <SessionCard key={session.id} session={session} index={index} />
-          ))}
-        </div>
+        {sessions && sessions.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {sessions.map((session: WeeklySession, index: number) => (
+              <SessionCard key={session.id} session={session} index={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+            <p className="text-text-secondary text-lg">
+              No sessions available yet.
+            </p>
+            <p className="text-text-muted text-sm">
+              Check back soon for new session recordings.
+            </p>
+          </div>
+        )}
 
         {/* Footer note */}
         <div className="mt-12 text-center">
