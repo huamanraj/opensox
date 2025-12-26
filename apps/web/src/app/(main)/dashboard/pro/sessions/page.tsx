@@ -156,7 +156,7 @@ const ProSessionsPage = (): JSX.Element | null => {
     isLoading: sessionsLoading,
     isError: sessionsError,
     error: sessionsErrorData,
-  } = (trpc.sessions as any).getAll.useQuery(undefined, {
+  } = trpc.sessions.getAll.useQuery(undefined, {
     enabled: !!session?.user && status === "authenticated" && isPaidUser,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // consider data fresh for 5 minutes
@@ -206,7 +206,7 @@ const ProSessionsPage = (): JSX.Element | null => {
             </p>
             {sessionsErrorData && (
               <p className="text-text-muted text-sm">
-                {(sessionsErrorData as any)?.message || "Unknown error"}
+                {sessionsErrorData.message || "Unknown error"}
               </p>
             )}
           </div>
