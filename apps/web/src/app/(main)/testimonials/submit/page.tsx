@@ -51,7 +51,7 @@ const formSchema = z.object({
   content: z
     .string()
     .min(10, "Testimonial must be at least 10 characters")
-    .max(1000, "Testimonial must be at most 1000 characters"),
+    .max(1500, "Testimonial must be at most 1000 characters"),
   socialLink: z
     .string()
     .refine(
@@ -87,7 +87,6 @@ export default function SubmitTestimonialPage() {
 
   const submitMutation = (trpc as any).testimonial.submit.useMutation({
     onSuccess: async () => {
-      // Redirect to testimonials page
       router.push("/testimonials");
     },
     onError: (error: any) => {
@@ -128,7 +127,7 @@ export default function SubmitTestimonialPage() {
   }, [session, reset, hasSubmittedTestimonial]);
 
   const onSubmit = (values: FormValues) => {
-    setError(null); // Clear previous errors
+    setError(null);
     if (!displayAvatar) {
       setError("Profile picture not found. Please log in again.");
       return;
@@ -372,7 +371,7 @@ export default function SubmitTestimonialPage() {
                     {...register("content")}
                     id="content"
                     placeholder="Tell us what you think about Opensox..."
-                    maxLength={1000}
+                    maxLength={1500}
                     className="bg-neutral-950 border-[#252525] focus:border-purple-500 text-white placeholder:text-neutral-600 min-h-[120px]"
                   />
                   <div className="flex justify-between items-center">
@@ -381,9 +380,9 @@ export default function SubmitTestimonialPage() {
                         {errors.content.message}
                       </p>
                     )}
-                    <p className="text-xs text-neutral-500 ml-auto">
-                      {contentValue?.length || 0}/1000
-                    </p>
+                    {/* <p className="text-xs text-neutral-500 ml-auto">
+                      {contentValue?.length || 0}/1500
+                    </p> */}
                   </div>
                 </div>
 

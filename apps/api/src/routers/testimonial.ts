@@ -5,102 +5,125 @@ import { TRPCError } from "@trpc/server";
 import { validateAvatarUrl } from "../utils/avatar-validator.js";
 
 export const testimonialRouter = router({
-    getAll: publicProcedure.query(async ({ ctx }: any) => {
-        // Fetch testimonials directly from database without caching
-        const testimonials = await ctx.db.prisma.testimonial.findMany({
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
+  getAll: publicProcedure.query(async ({ ctx }: any) => {
+    const testimonials = await ctx.db.prisma.testimonial.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-        return testimonials;
-    }),
+    return testimonials;
+  }),
 
-    getMyTestimonial: protectedProcedure.query(async ({ ctx }: any) => {
-        const userId = ctx.user.id;
+  getMyTestimonial: protectedProcedure.query(async ({ ctx }: any) => {
+    const userId = ctx.user.id;
 
-        // Check subscription
-        const { isPaidUser } = await userService.checkSubscriptionStatus(ctx.db.prisma, userId);
+    const { isPaidUser } = await userService.checkSubscriptionStatus(
+      ctx.db.prisma,
+      userId
+    );
 
-        if (!isPaidUser) {
-            throw new TRPCError({
-                code: "FORBIDDEN",
-                message: "Only premium users can submit testimonials",
-            });
-        }
+    if (!isPaidUser) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only premium users can submit testimonials",
+      });
+    }
 
-        const testimonial = await ctx.db.prisma.testimonial.findUnique({
-            where: { userId },
-        });
+    const testimonial = await ctx.db.prisma.testimonial.findUnique({
+      where: { userId },
+    });
 
-        return {
-            testimonial,
-        };
-    }),
+    return {
+      testimonial,
+    };
+  }),
 
-    submit: protectedProcedure
-        .input(z.object({
-            name: z.string().min(1, "Name is required").max(40, "Name must be at most 40 characters"),
-            content: z.string().min(10, "Testimonial must be at least 10 characters").max(1000, "Testimonial must be at most 1000 characters"),
-            avatar: z.string().url("Invalid avatar URL"),
-            socialLink: z.string().url("Invalid social link URL").refine((url) => {
+  submit: protectedProcedure
+    .input(
+      z.object({
+        name: z
+          .string()
+          .min(1, "Name is required")
+          .max(40, "Name must be at most 40 characters"),
+        content: z
+          .string()
+          .min(10, "Testimonial must be at least 10 characters")
+          .max(1500, "Testimonial must be at most 1500 characters"),
+        avatar: z.string().url(),
+        socialLink: z
+          .string()
+          .optional()
+          .refine(
+            (val) => {
+              if (!val || val === "") return true;
+              try {
+                const parsedUrl = new URL(val);
                 const supportedPlatforms = [
-                    'twitter.com',
-                    'x.com',
-                    'linkedin.com',
-                    'instagram.com',
-                    'youtube.com',
-                    'youtu.be',
+                  "twitter.com",
+                  "x.com",
+                  "linkedin.com",
+                  "instagram.com",
+                  "youtube.com",
+                  "youtu.be",
                 ];
-                try {
-                    const parsedUrl = new URL(url);
-                    return supportedPlatforms.some(platform => 
-                        parsedUrl.hostname === platform || 
-                        parsedUrl.hostname.endsWith('.' + platform)
-                    );
-                } catch {
-                    return false;
-                }
-            }, "Only Twitter/X, LinkedIn, Instagram, and YouTube links are supported").optional().or(z.literal('')),
-        }))
-        .mutation(async ({ ctx, input }: any) => {
-            const userId = ctx.user.id;
-
-            const { isPaidUser } = await userService.checkSubscriptionStatus(ctx.db.prisma, userId);
-            if (!isPaidUser) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only premium users can submit testimonials",
-                });
+                return supportedPlatforms.some(
+                  (platform) =>
+                    parsedUrl.hostname === platform ||
+                    parsedUrl.hostname.endsWith("." + platform)
+                );
+              } catch {
+                return false;
+              }
+            },
+            {
+              message:
+                "Must be a valid Twitter/X, LinkedIn, Instagram, or YouTube URL",
             }
+          )
+          .or(z.literal("")),
+      })
+    )
+    .mutation(async ({ ctx, input }: any) => {
+      const userId = ctx.user.id;
 
+      const { isPaidUser } = await userService.checkSubscriptionStatus(
+        ctx.db.prisma,
+        userId
+      );
 
+      if (!isPaidUser) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only premium users can submit testimonials",
+        });
+      }
 
-            // Check if testimonial already exists - prevent updates
-            const existingTestimonial = await ctx.db.prisma.testimonial.findUnique({
-                where: { userId },
-            });
+      const existingTestimonial = await ctx.db.prisma.testimonial.findUnique({
+        where: { userId },
+      });
 
-            if (existingTestimonial) {
-                throw new TRPCError({
-                    code: "BAD_REQUEST",
-                    message: "You have already submitted a testimonial. Testimonials cannot be edited once submitted.",
-                });
-            }
+      if (existingTestimonial) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "You have already submitted a testimonial. Testimonials cannot be edited once submitted.",
+        });
+      }
 
-            // Validate avatar URL with strict security checks
-            await validateAvatarUrl(input.avatar);
+      // Validate avatar URL with strict security checks
+      await validateAvatarUrl(input.avatar);
 
-            const result = await ctx.db.prisma.testimonial.create({
-                data: {
-                    userId,
-                    name: input.name,
-                    content: input.content,
-                    avatar: input.avatar,
-                    socialLink: input.socialLink || null,
-                },
-            });
+      const result = await ctx.db.prisma.testimonial.create({
+        data: {
+          userId,
+          name: input.name,
+          content: input.content,
+          avatar: input.avatar,
+          socialLink: input.socialLink || null,
+        },
+      });
 
-            return result;
-        }),
+      return result;
+    }),
 });
