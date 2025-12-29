@@ -94,7 +94,7 @@ export default function ProDashboardPage() {
         return;
       }
 
-      window.location.href = slackInviteUrl;
+      window.open(slackInviteUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
       console.error("Failed to join community:", err);
       setError("Failed to connect to server");

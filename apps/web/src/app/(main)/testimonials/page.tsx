@@ -170,15 +170,14 @@ const TestimonialsPage = () => {
     <main className="min-h-screen w-full bg-[#101010] text-white font-sans overflow-hidden relative">
       <Navbar />
 
-      <div className="min-h-screen w-full max-w-[2000px] mx-auto border-x border-[#252525] overflow-hidden pt-32 pb-20 px-4 md:px-6 lg:px-10">
+      <div className="min-h-screen w-full max-w-[2000px] mx-auto border-x border-border overflow-hidden pt-24 pb-20 px-4 md:px-6 lg:px-10">
         {/* Header */}
-        <div className="max-w-2xl mx-auto text-center mb-16 space-y-4">
-          <h1 className="text-4xl md:text-6xl font-semibold tracking-tighter text-white">
-            Loved by <span className="text-purple-500">Developers</span>
+        <div className="max-w-3xl mx-auto text-center mb-12 space-y-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tighter text-text-primary">
+            Loved by <span className="text-brand-purple">our Investors</span>
           </h1>
-          <p className="text-lg text-neutral-400">
-            See what the community is saying about how Opensox is changing their
-            open source workflow.
+          <p className="text-base md:text-lg text-text-tertiary max-w-2xl mx-auto">
+            See what the people who believed in Opensox AI said about it.
           </p>
         </div>
 

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import type { Session } from "next-auth";
 
 interface CheckoutConfirmationProps {
@@ -14,17 +15,14 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
   className,
 }) => {
   const { data: session } = useSession();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [isJoining, setIsJoining] = useState(false);
 
   const handleJoinCommunity = async () => {
-    if (isJoining) return;
-    setIsJoining(true);
     setError(null);
 
     if (!session?.user) {
       setError("Please sign in to join the community");
-      setIsJoining(false);
       return;
     }
 
@@ -32,7 +30,6 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
 
     if (!accessToken) {
       setError("Authentication token not found");
-      setIsJoining(false);
       return;
     }
 
@@ -48,16 +45,14 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
       if (!response.ok) {
         const errorData = await response.json();
         setError(errorData.error || "Failed to join community");
-        setIsJoining(false);
         return;
       }
 
       const { slackInviteUrl } = await response.json();
-      window.location.href = slackInviteUrl;
+      window.open(slackInviteUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
       console.error("Failed to join community:", err);
       setError("Failed to connect to server");
-      setIsJoining(false);
     }
   };
 
@@ -89,17 +84,24 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
             <span className="text-[#A970FF]">hi@opensox.ai</span>
           </p>
 
-          {/* Join Community Button - Only shown when logged in */}
+          {/* Action Buttons - Only shown when logged in */}
           {session?.user && (
             <div className="pt-4">
-              <button
-                onClick={handleJoinCommunity}
-                disabled={isJoining}
-                className="px-8 py-3 bg-[#A970FF] hover:bg-[#9255E8] text-white font-semibold rounded-lg transition-colors duration-200"
-              >
-                {isJoining ? "Joining..." : "Join"}
-              </button>
-              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button
+                  onClick={handleJoinCommunity}
+                  className="px-8 py-3 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-semibold rounded-lg transition-colors duration-200"
+                >
+                  Join
+                </button>
+                <button
+                  onClick={() => router.push("/dashboard/home")}
+                  className="px-8 py-3 bg-surface-elevated hover:bg-surface-hover text-text-primary font-semibold rounded-lg transition-colors duration-200 border border-border"
+                >
+                  Home
+                </button>
+              </div>
+              {error && <p className="text-error-text text-sm mt-2">{error}</p>}
             </div>
           )}
         </div>

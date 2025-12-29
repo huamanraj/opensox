@@ -50,7 +50,7 @@ export const testimonialRouter = router({
           .string()
           .min(10, "Testimonial must be at least 10 characters")
           .max(1500, "Testimonial must be at most 1500 characters"),
-        avatar: z.string().url(),
+        avatar: z.url(),
         socialLink: z
           .string()
           .optional()

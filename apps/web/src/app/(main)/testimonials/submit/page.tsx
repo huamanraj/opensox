@@ -281,7 +281,7 @@ export default function SubmitTestimonialPage() {
               What you think about me?
             </h1>
             <p className="text-neutral-400">
-              Share your experience with the community.
+              Share your experience with the world.
             </p>
           </div>
 
