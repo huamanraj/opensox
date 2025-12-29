@@ -26,10 +26,21 @@ export const sessionService = {
       throw new Error("Active subscription required to access sessions");
     }
 
-    // fetch sessions with topics ordered by sessionDate descending
+    // fetch only fields needed by the web ui; keep topics ordered
     const sessions = await prisma.weeklySession.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        youtubeUrl: true,
+        sessionDate: true,
         topics: {
+          select: {
+            id: true,
+            timestamp: true,
+            topic: true,
+            order: true,
+          },
           orderBy: {
             order: "asc",
           },
