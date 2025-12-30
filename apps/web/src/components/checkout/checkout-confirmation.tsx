@@ -89,7 +89,7 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
 
           <p className="text-lg lg:text-xl text-white/90 leading-relaxed font-light max-w-3xl mx-auto">
             If you have any doubts, feel free to ping us here:{" "}
-            <span className="text-[#A970FF]">hi@opensox.ai</span>
+            <span className="text-brand-purple-light">hi@opensox.ai</span>
           </p>
 
           {/* Action Buttons - Only shown when logged in */}

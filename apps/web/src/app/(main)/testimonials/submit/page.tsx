@@ -150,16 +150,16 @@ export default function SubmitTestimonialPage() {
     (isPaidUser && isDataLoading)
   ) {
     return (
-      <main className="min-h-screen w-full bg-[#101010] text-white font-sans overflow-hidden flex flex-col relative">
+      <main className="min-h-screen w-full bg-surface-primary text-white font-sans overflow-hidden flex flex-col relative">
         <Navbar />
-        <div className="flex-1 w-full max-w-[2000px] mx-auto border-x border-[#252525] flex flex-col pt-32 pb-20 px-4 md:px-6 lg:px-10 mt-10">
+        <div className="flex-1 w-full max-w-[2000px] mx-auto border-x border flex flex-col pt-32 pb-20 px-4 md:px-6 lg:px-10 mt-10">
           <div className="max-w-2xl mx-auto w-full space-y-8">
             <div className="text-center space-y-2">
               <Skeleton className="h-10 w-3/4 mx-auto bg-neutral-800" />
               <Skeleton className="h-5 w-1/2 mx-auto bg-neutral-800" />
             </div>
 
-            <div className="bg-neutral-900/50 border border-[#252525] rounded-2xl p-6 md:p-8 space-y-6">
+            <div className="bg-neutral-900/50 border rounded-2xl p-6 md:p-8 space-y-6">
               {/* Profile & Name Skeleton */}
               <div className="space-y-2">
                 <Skeleton className="h-4 w-40 bg-neutral-800" />
@@ -201,7 +201,7 @@ export default function SubmitTestimonialPage() {
   // Not Logged In State
   if (sessionStatus === "unauthenticated") {
     return (
-      <main className="min-h-screen w-full bg-[#101010] text-white font-sans overflow-hidden flex flex-col relative">
+      <main className="min-h-screen w-full bg-surface-primary text-white font-sans overflow-hidden flex flex-col relative">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center space-y-6 px-4 text-center z-10 pt-24">
           <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700 mb-4">
@@ -222,13 +222,13 @@ export default function SubmitTestimonialPage() {
             <Button
               onClick={() => router.push("/testimonials")}
               variant="outline"
-              className="border-[#252525] bg-transparent hover:bg-white/5 text-white"
+              className="border bg-transparent hover:bg-white/5 text-white"
             >
               Back to Testimonials
             </Button>
           </div>
         </div>
-        <div className="w-full max-w-[2000px] mx-auto border-t border-[#252525]">
+        <div className="w-full max-w-[2000px] mx-auto border-t border">
           <Footer />
         </div>
       </main>
@@ -238,7 +238,7 @@ export default function SubmitTestimonialPage() {
   // Access Denied State (Logged in but not paid)
   if (!isPaidUser) {
     return (
-      <main className="min-h-screen w-full bg-[#101010] text-white font-sans overflow-hidden flex flex-col relative">
+      <main className="min-h-screen w-full bg-surface-primary text-white font-sans overflow-hidden flex flex-col relative">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center space-y-6 px-4 text-center z-10 pt-24">
           <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20 mb-4">
@@ -259,13 +259,13 @@ export default function SubmitTestimonialPage() {
             <Button
               onClick={() => router.push("/testimonials")}
               variant="outline"
-              className="border-[#252525] bg-transparent hover:bg-white/5 text-white"
+              className="border bg-transparent hover:bg-white/5 text-white"
             >
               Back to Testimonials
             </Button>
           </div>
         </div>
-        <div className="w-full max-w-[2000px] mx-auto border-t border-[#252525]">
+        <div className="w-full max-w-[2000px] mx-auto border-t border">
           <Footer />
         </div>
       </main>
@@ -273,10 +273,10 @@ export default function SubmitTestimonialPage() {
   }
 
   return (
-    <main className="min-h-screen w-full bg-[#101010] text-white font-sans overflow-hidden relative flex flex-col">
+    <main className="min-h-screen w-full bg-surface-primary text-white font-sans overflow-hidden relative flex flex-col">
       <Navbar />
 
-      <div className="flex-1 w-full max-w-[2000px] mx-auto border-x border-[#252525] flex flex-col pt-32 pb-20 px-4 md:px-6 lg:px-10 mt-10">
+      <div className="flex-1 w-full max-w-[2000px] mx-auto border-x border flex flex-col pt-32 pb-20 px-4 md:px-6 lg:px-10 mt-10">
         <div className="max-w-2xl mx-auto w-full space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -295,7 +295,7 @@ export default function SubmitTestimonialPage() {
             <span>Home</span>
           </button>
 
-          <div className="bg-neutral-900/50 border border-[#252525] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="bg-neutral-900/50 border rounded-2xl p-6 md:p-8 space-y-6">
             {/* Already Submitted State */}
             {hasSubmittedTestimonial ? (
               <div className="text-center space-y-4">
@@ -324,7 +324,7 @@ export default function SubmitTestimonialPage() {
                     Profile & Display Name
                   </Label>
                   <div className="flex gap-4 items-start">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#252525] bg-neutral-800 flex-shrink-0">
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden border bg-neutral-800 flex-shrink-0">
                       {displayAvatar ? (
                         <Image
                           src={displayAvatar}
@@ -348,7 +348,7 @@ export default function SubmitTestimonialPage() {
                         id="name"
                         placeholder="Your Name"
                         maxLength={40}
-                        className="bg-neutral-950 border-[#252525] focus:border-purple-500 text-white placeholder:text-neutral-600"
+                        className="bg-neutral-950 border focus:border-purple-500 text-white placeholder:text-neutral-600"
                       />
                       <div className="flex justify-between items-center">
                         {errors.name && (
@@ -374,7 +374,7 @@ export default function SubmitTestimonialPage() {
                     id="content"
                     placeholder="Tell us what you think about Opensox..."
                     maxLength={1500}
-                    className="bg-neutral-950 border-[#252525] focus:border-purple-500 text-white placeholder:text-neutral-600 min-h-[120px]"
+                    className="bg-neutral-950 border focus:border-purple-500 text-white placeholder:text-neutral-600 min-h-[120px]"
                   />
                   <div className="flex justify-between items-center">
                     {errors.content && (
@@ -402,7 +402,7 @@ export default function SubmitTestimonialPage() {
                       {...register("socialLink")}
                       id="socialLink"
                       placeholder="https://twitter.com/username"
-                      className="bg-neutral-950 border-[#252525] focus:border-purple-500 text-white placeholder:text-neutral-600 pl-10"
+                      className="bg-neutral-950 border focus:border-purple-500 text-white placeholder:text-neutral-600 pl-10"
                     />
                   </div>
                   {errors.socialLink && (
