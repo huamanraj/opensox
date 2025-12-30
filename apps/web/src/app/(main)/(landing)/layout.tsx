@@ -1,5 +1,5 @@
-import Navbar from '@/components/landing-sections/navbar'
 import React from 'react'
+import Navbar from '@/components/landing-sections/navbar'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
     return (

@@ -17,12 +17,17 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
   const { data: session } = useSession();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState(false);
 
   const handleJoinCommunity = async () => {
+    if (isJoining) return;
+
+    setIsJoining(true);
     setError(null);
 
     if (!session?.user) {
       setError("Please sign in to join the community");
+      setIsJoining(false);
       return;
     }
 
@@ -30,6 +35,7 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
 
     if (!accessToken) {
       setError("Authentication token not found");
+      setIsJoining(false);
       return;
     }
 
@@ -53,6 +59,8 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
     } catch (err) {
       console.error("Failed to join community:", err);
       setError("Failed to connect to server");
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -90,9 +98,10 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <button
                   onClick={handleJoinCommunity}
-                  className="px-8 py-3 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-semibold rounded-lg transition-colors duration-200"
+                  disabled={isJoining}
+                  className="px-8 py-3 bg-brand-purple hover:bg-brand-purple-light text-text-primary font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Join
+                  {isJoining ? "Joining..." : "Join"}
                 </button>
                 <button
                   onClick={() => router.push("/dashboard/home")}

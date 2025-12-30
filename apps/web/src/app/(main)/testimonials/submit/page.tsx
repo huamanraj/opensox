@@ -29,11 +29,13 @@ const SUPPORTED_PLATFORMS = [
 ];
 
 const validateSocialLink = (url: string) => {
-  if (!url) return true; // Empty is allowed (optional)
+  if (!url) return true;
   try {
     const parsedUrl = new URL(url);
-    return SUPPORTED_PLATFORMS.some((platform) =>
-      parsedUrl.hostname.includes(platform)
+    return SUPPORTED_PLATFORMS.some(
+      (platform) =>
+        parsedUrl.hostname === platform ||
+        parsedUrl.hostname.endsWith("." + platform)
     );
   } catch {
     return false;
@@ -51,7 +53,7 @@ const formSchema = z.object({
   content: z
     .string()
     .min(10, "Testimonial must be at least 10 characters")
-    .max(1500, "Testimonial must be at most 1000 characters"),
+    .max(1500, "Testimonial must be at most 1500 characters"),
   socialLink: z
     .string()
     .refine(

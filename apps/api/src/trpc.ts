@@ -2,10 +2,6 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { Context } from "./context.js";
 import { verifyToken } from "./utils/auth.js";
-// import type { User } from "@prisma/client";
-
-// Type for context after authentication middleware
-// type ProtectedContext = Context & { user: User };
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
